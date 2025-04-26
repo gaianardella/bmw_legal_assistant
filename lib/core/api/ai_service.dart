@@ -294,31 +294,268 @@ int? _getIntValue(Map<String, dynamic> json, String key) {
   return null;
 }
   
-  // Generate a document draft based on case details
-  Future<DocumentModel> generateDocumentDraft(String caseId, DocumentType documentType) async {
-    try {
-      final response = await _dio.post(
-        '/generate-document',
-        data: {
-          'case_id': caseId,
-          'document_type': documentType.toShortString(),
-        },
-      );
+// Generate a document draft based on case details
+Future<DocumentModel> generateDocumentDraft(String caseId, DocumentType documentType) async {
+  try {
+    // First step: retrieve case information to provide context to Claude
+    CaseModel? caseModel;
+    
+    // In a real implementation, you would retrieve the case by ID from your database or API
+    // For now, we'll use the mock case data for testing
+    caseModel = _getMockCaseAnalysis();
+    
+    // Build a specific prompt for the requested document type
+    String documentPrompt = "";
+    
+    switch (documentType) {
+      case DocumentType.klageerwiderung:
+        documentPrompt = '''
+You are an expert lawyer working for BMW. Create a formal legal response (Klageerwiderung) for the following case:
+
+Case title: ${caseModel.title}
+Case ID: ${caseModel.id}
+Description: ${caseModel.description}
+Case type: ${caseModel.type.toString()}
+Filing date: ${caseModel.filingDate.toString()}
+
+Risk assessment:
+- Overall risk score: ${caseModel.riskAssessment.overallRiskScore}
+- Brand reputation risk: ${caseModel.riskAssessment.brandReputationRisk}
+- Legal complexity: ${caseModel.riskAssessment.legalComplexityRisk}
+- Financial exposure: ${caseModel.riskAssessment.financialExposureRisk}
+- Win probability: ${caseModel.riskAssessment.winProbabilityScore}
+
+Recommended strategies:
+${caseModel.recommendedStrategies.map((s) => "- $s").join('\n')}
+
+Similar cases:
+${caseModel.similarCases.map((c) => "- ${c.title}: ${c.description} (Outcome: ${c.outcome.toString()})").join('\n')}
+
+Generate a formal statement of defense in English that:
+1. Contests the main allegations
+2. Presents counter-evidence and solid legal arguments
+3. Utilizes the recommended strategies
+4. References similar precedents when relevant
+5. Follows an appropriate formal structure for a legal document
+6. Includes all formal elements necessary for a statement of defense
+
+The response should include:
+- Formal header with case information
+- Introduction section
+- Contestation of facts
+- Legal arguments
+- Request for dismissal
+- Conclusion
+
+Provide a complete and professional document ready to be submitted to court.
+''';
+        break;
       
-      if (response.statusCode == 200) {
-        return DocumentModel.fromJson(response.data);
+      case DocumentType.legalNotice:
+        documentPrompt = '''
+You are an expert lawyer working for BMW. Create a formal legal notice for the following case:
+
+Case title: ${caseModel.title}
+Case ID: ${caseModel.id}
+Description: ${caseModel.description}
+Case type: ${caseModel.type.toString()}
+Filing date: ${caseModel.filingDate.toString()}
+
+Generate a formal legal notice that:
+1. Clearly states BMW's position
+2. Presents the relevant facts
+3. Cites applicable laws and regulations
+4. Includes a clear request for action or resolution
+''';
+        break;
+      
+      case DocumentType.settlement:
+        documentPrompt = '''
+You are an expert lawyer working for BMW. Create a settlement proposal for the following case:
+
+Case title: ${caseModel.title}
+Case ID: ${caseModel.id}
+Description: ${caseModel.description}
+Case type: ${caseModel.type.toString()}
+Filing date: ${caseModel.filingDate.toString()}
+Risk assessment:
+- Overall risk score: ${caseModel.riskAssessment.overallRiskScore}
+- Financial exposure: ${caseModel.riskAssessment.financialExposureRisk}
+
+Create a settlement proposal that:
+1. Acknowledges the situation without admitting liability
+2. Presents a fair and reasonable offer
+3. Outlines conditions for settlement
+4. Includes confidentiality provisions
+5. Details release of claims language
+''';
+        break;
+        
+      case DocumentType.complaint:
+        documentPrompt = '''
+You are an expert lawyer working for BMW. Create a complaint response for the following case:
+
+Case title: ${caseModel.title}
+Case ID: ${caseModel.id}
+Description: ${caseModel.description}
+Case type: ${caseModel.type.toString()}
+Filing date: ${caseModel.filingDate.toString()}
+
+Create a formal complaint response that:
+1. Addresses each allegation point by point
+2. Presents BMW's position on each issue
+3. Cites relevant law, regulations, and precedents
+4. Requests appropriate relief or dismissal
+''';
+        break;
+        
+      // Add other cases for different document types
+      default:
+        documentPrompt = '''
+You are an expert lawyer working for BMW. Create a legal document for the following case:
+
+Case title: ${caseModel.title}
+Case ID: ${caseModel.id}
+Description: ${caseModel.description}
+Case type: ${caseModel.type.toString()}
+Filing date: ${caseModel.filingDate.toString()}
+
+Risk assessment:
+- Overall risk score: ${caseModel.riskAssessment.overallRiskScore}
+- Brand reputation risk: ${caseModel.riskAssessment.brandReputationRisk}
+- Legal complexity: ${caseModel.riskAssessment.legalComplexityRisk}
+- Financial exposure: ${caseModel.riskAssessment.financialExposureRisk}
+- Win probability: ${caseModel.riskAssessment.winProbabilityScore}
+
+Generate a professional legal document appropriate for this type of case.
+''';
+    }
+    
+    // Make the API call to Claude
+    final response = await _dio.post(
+      '/messages',
+      data: {
+        'model': 'claude-3-5-sonnet-20241022',
+        'max_tokens': 4000,
+        'messages': [
+          {
+            'role': 'user',
+            'content': documentPrompt
+          }
+        ]
+      },
+    );
+    
+    // Replace this block in your generateDocumentDraft method
+// Where you currently have the static analysis creation
+
+if (response.statusCode == 200) {
+  // Extract the generated content from Claude's response
+  final generatedText = response.data['content'][0]['text'];
+  
+  // Now make a second API call to Claude to analyze the document
+  final analysisResponse = await _dio.post(
+    '/messages',
+    data: {
+      'model': 'claude-3-5-sonnet-20241022',
+      'max_tokens': 1024,
+      'messages': [
+        {
+          'role': 'user',
+          'content': '''Analyze this legal document I've drafted for BMW and provide a JSON response with the following fields:
+1. alignment_score: integer from 0-100 rating how well the document aligns with BMW's legal standards and position
+2. completeness_score: integer from 0-100 rating how complete the document is
+3. strength_score: integer from 0-100 rating how strong the legal arguments are
+4. feedback: array of feedback objects, each containing:
+   - type: one of "strength", "weakness", "improvement", "missing", "legal"
+   - content: string describing the feedback point
+   - suggestion: (optional) string with a specific suggestion for improvement
+
+Document:
+${generatedText}
+
+Return only valid JSON in your response with no additional text.
+'''
+        }
+      ]
+    },
+  );
+  
+  DocumentAnalysis analysis;
+  
+  if (analysisResponse.statusCode == 200) {
+    try {
+      final analysisText = analysisResponse.data['content'][0]['text'];
+      
+      // Extract the JSON from Claude's response
+      final jsonPattern = RegExp(r'\{[\s\S]*\}');
+      final match = jsonPattern.firstMatch(analysisText);
+      
+      if (match != null) {
+        final jsonString = match.group(0);
+        final Map<String, dynamic> analysisData = json.decode(jsonString!);
+        
+        // Create feedback objects from the data
+        List<DocumentFeedback> feedbackList = [];
+        if (analysisData['feedback'] is List) {
+          for (var item in analysisData['feedback']) {
+            feedbackList.add(DocumentFeedback(
+              type: FeedbackTypeExtension.fromString(item['type'] ?? 'improvement'),
+              content: item['content'] ?? 'Review this section of the document.',
+              suggestion: item['suggestion'],
+            ));
+          }
+        }
+        
+        // Create analysis object with Claude's scores
+        analysis = DocumentAnalysis(
+          alignmentScore: analysisData['alignment_score'] ?? 75,
+          completenessScore: analysisData['completeness_score'] ?? 75,
+          strengthScore: analysisData['strength_score'] ?? 75,
+          feedback: feedbackList,
+        );
       } else {
-        throw Exception('Failed to generate document: ${response.statusCode}');
+        // Fallback if JSON extraction fails
+        throw Exception('Failed to extract JSON from response');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Error generating document draft: $e');
+        print('Error parsing analysis response: $e');
       }
-      
-      // For demo/development: Return mock data
-      return _getMockDocument(documentType);
+      // Fallback analysis
+      analysis = _getMockDocumentAnalysis();
     }
+  } else {
+    // Use mock analysis if the API call fails
+    analysis = _getMockDocumentAnalysis();
   }
+  
+  // Create and return the document model
+  return DocumentModel(
+    id: 'DOC-${DateTime.now().millisecondsSinceEpoch}',
+    title: '${documentType.displayName} - ${caseModel.title}',
+    fileName: '${documentType.toShortString()}_${caseId.replaceAll('-', '_')}.docx',
+    type: documentType,
+    createdAt: DateTime.now(),
+    lastModified: DateTime.now(),
+    content: generatedText,
+    analysis: analysis,
+  );
+} else {
+  throw Exception('Failed to generate document: ${response.statusCode}');
+}
+      
+      // Create and return the document model
+
+  } catch (e) {
+    if (kDebugMode) {
+      print('Error generating document draft: $e');
+    }
+    
+    // For development/demo: Return mock data in case of error
+    return _getMockDocument(documentType);
+  }
+}
   
   // Analyze an existing document and provide feedback
   Future<DocumentAnalysis> analyzeDocument(File document, String caseId) async {
