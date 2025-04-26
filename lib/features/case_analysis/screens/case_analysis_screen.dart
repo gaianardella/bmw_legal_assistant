@@ -5,6 +5,7 @@ import 'package:bmw_legal_assistant/core/api/ai_service.dart';
 import 'package:bmw_legal_assistant/core/models/case_model.dart';
 import 'package:bmw_legal_assistant/features/case_analysis/widgets/case_summary_card.dart';
 import 'package:bmw_legal_assistant/features/case_analysis/widgets/risk_assessment_card.dart';
+import 'package:bmw_legal_assistant/features/case_analysis/widgets/recommended_strategies_card.dart';
 import 'package:bmw_legal_assistant/features/case_analysis/widgets/similar_cases_card.dart';
 import 'package:bmw_legal_assistant/features/case_analysis/widgets/case_upload_card.dart';
 import 'package:file_picker/file_picker.dart';
@@ -58,6 +59,11 @@ class CaseAnalysisScreen extends ConsumerWidget {
       }
     }
 
+    // New method to reset the analysis
+    void resetAnalysis() {
+      ref.read(caseAnalysisProvider.notifier).state = null;
+    }
+    
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -113,6 +119,8 @@ class CaseAnalysisScreen extends ConsumerWidget {
                     RiskAssessmentCard(riskAssessment: caseAnalysis.riskAssessment),
                     const SizedBox(height: 24),
                     SimilarCasesCard(similarCases: caseAnalysis.similarCases),
+                    const SizedBox(height: 24),
+                    RecommendedStrategiesCard(caseModel: caseAnalysis),
                   ],
                   
                   // Add some bottom padding
@@ -123,6 +131,15 @@ class CaseAnalysisScreen extends ConsumerWidget {
           ),
         ],
       ),
+       // Floating action button to reset analysis
+      floatingActionButton: caseAnalysis != null 
+        ? FloatingActionButton(
+            onPressed: resetAnalysis,
+            backgroundColor: Colors.blue,
+            child: const Icon(Icons.upload_file_rounded),
+          )
+        : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }

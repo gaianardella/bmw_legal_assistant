@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:bmw_legal_assistant/core/models/case_model.dart';
 import 'package:bmw_legal_assistant/core/models/document_model.dart';
+import 'package:claude_dart_flutter/claude_dart_flutter.dart';
 
 class AIService {
   static final AIService _instance = AIService._internal();
@@ -20,45 +21,75 @@ class AIService {
   }
 
   void _init() {
-    _apiKey = dotenv.env['AI_API_KEY'];
-    _dio.options.baseUrl = dotenv.env['AI_API_BASE_URL'] ?? 'https://api.openai.com/v1';
+    _apiKey = dotenv.env['ANTHROPIC_API_KEY'];
+    _dio.options.baseUrl = 'https://api.anthropic.com/v1';
     _dio.options.headers = {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer $_apiKey',
+      'X-API-Key': _apiKey,
+      'Anthropic-Version': '2023-06-01',
     };
     _dio.options.connectTimeout = const Duration(seconds: 30);
     _dio.options.receiveTimeout = const Duration(seconds: 60);
   }
 
-  // Analyze a case document and extract relevant information
-  Future<CaseModel> analyzeCaseDocument(File document) async {
-    try {
-      // Convert document to base64
-      final bytes = await document.readAsBytes();
-      final base64File = base64Encode(bytes);
-      
-      final response = await _dio.post(
-        '/analyze-case',
-        data: {
-          'document': base64File,
-          'filename': document.path.split('/').last,
-        },
-      );
-      
-      if (response.statusCode == 200) {
-        return CaseModel.fromJson(response.data);
-      } else {
-        throw Exception('Failed to analyze case: ${response.statusCode}');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error analyzing case document: $e');
-      }
-      
-      // For demo/development: Return mock data
-      return _getMockCaseAnalysis();
-    }
+Future<CaseModel> analyzeCaseDocument(File document) async {
+  try {
+    final bytes = await document.readAsBytes();
+    final base64File = base64Encode(bytes);
+    
+    final response = await _dio.post(
+      '/messages',
+      data: {
+        'model': 'claude-3-5-sonnet-20241022',
+        'max_tokens': 1024,
+        'messages': [
+          {
+            'role': 'user',
+            'content': [
+              {
+                'type': 'text',
+                'text': '''Analyze this legal document and provide a JSON with the following mandatory fields:
+- id: a unique identifier generated
+- title: case title
+- description: brief case description
+- type: case type (choose from CaseType enum)
+- filingDate: exact filing date of the document (in ISO 8601 format)
+- riskAssessment: risk assessment with scores from 0 to 100
+- recommendedStrategies: array of recommended strategies
+- similarCases: array of similar cases
+
+If you cannot find a specific filing date, use the current date.'''
+              },
+              {
+                'type': 'file',
+                'content': base64File,
+                'media_type': 'application/pdf'
+              }
+            ]
+          }
+        ]
+      },
+    );
+    if (kDebugMode) {
+  print('Full Claude Response: ${response.data}');
   }
+    
+    if (response.statusCode == 200) {
+      final responseContent = response.data['content'][0]['text'];
+      final Map<String, dynamic> caseData = json.decode(responseContent);
+      
+      return CaseModel.fromJson(caseData);
+    } else {
+      throw Exception('Failed to analyze case: ${response.statusCode}');
+    }
+  } catch (e) {
+    if (kDebugMode) {
+      print('Error analyzing case document: $e');
+    }
+    
+    return _getMockCaseAnalysis();
+  }
+}
   
   // Generate a document draft based on case details
   Future<DocumentModel> generateDocumentDraft(String caseId, DocumentType documentType) async {

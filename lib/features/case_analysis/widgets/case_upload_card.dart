@@ -15,39 +15,39 @@ class CaseUploadCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Colors.white, Color(0xFFF5F5F7)],
-        ),
+        borderRadius: BorderRadius.circular(16),
+        color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
-      child: isAnalyzing
-          ? _buildAnalyzingState(context)
-          : _buildUploadState(context),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: isAnalyzing
+            ? _buildAnalyzingState(context)
+            : _buildUploadState(context),
+      ),
     );
   }
 
   Widget _buildUploadState(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(40),
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 48),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // Upload icon
           Container(
-            width: 100,
-            height: 100,
+            width: 96,
+            height: 96,
             decoration: BoxDecoration(
-              color: AppColors.lightBlue,
-              borderRadius: BorderRadius.circular(50),
+              color: AppColors.lightBlue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(48),
             ),
             child: Center(
               child: Icon(
@@ -62,18 +62,21 @@ class CaseUploadCard extends StatelessWidget {
           // Title and description
           Text(
             'Upload Case Documents',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: Colors.black,
-              fontWeight: FontWeight.w400,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: Colors.black87,
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.5,
             ),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           Text(
-            'Our AI will analyze your case documents, extract key information, and provide risk assessment and strategic recommendations.',
+            'Our advanced AI will analyze your case documents, extract critical insights, and provide comprehensive strategic recommendations.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey[600],
-              height: 1.5,
+              color: Colors.grey[700],
+              height: 1.6,
+              letterSpacing: -0.2,
             ),
           ),
           const SizedBox(height: 40),
@@ -83,25 +86,30 @@ class CaseUploadCard extends StatelessWidget {
             onPressed: onUpload,
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(
-                horizontal: 36,
+                horizontal: 40,
                 vertical: 16,
               ),
               backgroundColor: AppColors.bmwBlue,
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
               ),
             ),
             child: const Text('Select Document'),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           
           // Supported formats
           Text(
             'Supported formats: PDF, DOCX, DOC, TXT',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Colors.grey[500],
+              letterSpacing: 0.2,
             ),
           ),
         ],
@@ -110,26 +118,27 @@ class CaseUploadCard extends StatelessWidget {
   }
 
   Widget _buildAnalyzingState(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(40),
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 48),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // Animated loading indicator
           Container(
-            width: 100,
-            height: 100,
+            width: 96,
+            height: 96,
             decoration: BoxDecoration(
-              color: AppColors.lightBlue,
-              borderRadius: BorderRadius.circular(50),
+              color: AppColors.lightBlue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(48),
             ),
             child: Center(
               child: SizedBox(
-                width: 50,
-                height: 50,
+                width: 56,
+                height: 56,
                 child: CircularProgressIndicator(
                   valueColor: AlwaysStoppedAnimation<Color>(AppColors.bmwBlue),
-                  strokeWidth: 3,
+                  strokeWidth: 3.5,
                 ),
               ),
             ),
@@ -139,18 +148,21 @@ class CaseUploadCard extends StatelessWidget {
           // Title and description
           Text(
             'Analyzing Document',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: Colors.black,
-              fontWeight: FontWeight.w400,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: Colors.black87,
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.5,
             ),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           Text(
-            'Our AI is extracting key information from your document, identifying case type, calculating risk scores, and finding similar precedents.',
+            'Our AI is meticulously extracting key information, identifying case complexities, calculating precise risk assessments, and discovering relevant legal precedents.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey[600],
-              height: 1.5,
+              color: Colors.grey[700],
+              height: 1.6,
+              letterSpacing: -0.2,
             ),
           ),
           const SizedBox(height: 40),
@@ -182,8 +194,12 @@ class _AnimatedLoadingIndicatorState extends State<_AnimatedLoadingIndicator>
       duration: const Duration(seconds: 15),
       vsync: this,
     );
-    _animation = Tween<double>(begin: 0, end: 1).animate(_controller)
-      ..addListener(() {
+    _animation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeInOut,
+      ),
+    )..addListener(() {
         setState(() {});
       });
     _controller.forward();
@@ -205,15 +221,16 @@ class _AnimatedLoadingIndicatorState extends State<_AnimatedLoadingIndicator>
           value: _animation.value,
           backgroundColor: Colors.grey[200],
           valueColor: AlwaysStoppedAnimation<Color>(AppColors.bmwBlue),
-          borderRadius: BorderRadius.circular(10),
-          minHeight: 8,
+          borderRadius: BorderRadius.circular(4),
+          minHeight: 6,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Text(
           '$percentage%',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Colors.grey[600],
+            color: Colors.grey[700],
             fontWeight: FontWeight.w500,
+            letterSpacing: 0.5,
           ),
         ),
       ],

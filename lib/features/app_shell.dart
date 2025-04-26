@@ -14,39 +14,45 @@ class AppShell extends ConsumerWidget {
     final selectedTabIndex = ref.watch(selectedTabProvider);
 
     return Scaffold(
-      body: Column(
-        children: [
-          // Horizontal top bar with logos
-          _TopBar(),
-          
-          // Main content area with side navigation
-          Expanded(
-            child: Row(
-              children: [
-                // Side Navigation (narrower width)
-                _SideNavigation(
-                  selectedIndex: selectedTabIndex,
-                  onIndexChanged: (index) => ref.read(selectedTabProvider.notifier).state = index,
-                ),
-                
-                // Main Content
-                Expanded(
-                  child: IndexedStack(
-                    index: selectedTabIndex,
-                    children: const [
-                      CaseAnalysisScreen(),
-                      DocumentReviewScreen(),
-                      // Add more screens here as needed
-                      Placeholder(color: AppColors.lightBlue), // Placeholder for future screens
-                      Placeholder(color: AppColors.lightBlue), // Placeholder for future screens
-                    ],
-                  ),
-                ),
-              ],
+      body: Container(
+  decoration: const BoxDecoration(
+    gradient: LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        Color(0xFFA2CAFE), // azzurro chiaro
+        Color(0xFF004AAD), // blu intenso
+      ],
+    ),
+  ),
+  child: Column(
+    children: [
+      _TopBar(),
+      Expanded(
+        child: Row(
+          children: [
+            _SideNavigation(
+              selectedIndex: selectedTabIndex,
+              onIndexChanged: (index) => ref.read(selectedTabProvider.notifier).state = index,
             ),
-          ),
-        ],
+            Expanded(
+              child: IndexedStack(
+                index: selectedTabIndex,
+                children: const [
+                  CaseAnalysisScreen(),
+                  DocumentReviewScreen(),
+                  Placeholder(color: AppColors.lightBlue),
+                  Placeholder(color: AppColors.lightBlue),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
+    ],
+  ),
+),
+
     );
   }
 }

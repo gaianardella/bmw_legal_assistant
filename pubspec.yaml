@@ -22,6 +22,9 @@ dependencies:
   shared_preferences: ^2.2.0
   flutter_dotenv: ^5.1.0
   file_selector: ^1.0.1
+  claude_dart_flutter: ^1.0.0+1
+  read_pdf_text: ^0.3.0
+
 
 dev_dependencies:
   flutter_test:
