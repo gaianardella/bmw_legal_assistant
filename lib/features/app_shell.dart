@@ -14,28 +14,175 @@ class AppShell extends ConsumerWidget {
     final selectedTabIndex = ref.watch(selectedTabProvider);
 
     return Scaffold(
-      body: Row(
+      body: Column(
         children: [
-          // Side Navigation
-          _SideNavigation(
-            selectedIndex: selectedTabIndex,
-            onIndexChanged: (index) => ref.read(selectedTabProvider.notifier).state = index,
-          ),
+          // Horizontal top bar with logos
+          _TopBar(),
           
-          // Main Content
+          // Main content area with side navigation
           Expanded(
-            child: IndexedStack(
-              index: selectedTabIndex,
-              children: const [
-                CaseAnalysisScreen(),
-                DocumentReviewScreen(),
-                // Add more screens here as needed
-                Placeholder(color: AppColors.lightBlue), // Placeholder for future screens
-                Placeholder(color: AppColors.lightBlue), // Placeholder for future screens
+            child: Row(
+              children: [
+                // Side Navigation (narrower width)
+                _SideNavigation(
+                  selectedIndex: selectedTabIndex,
+                  onIndexChanged: (index) => ref.read(selectedTabProvider.notifier).state = index,
+                ),
+                
+                // Main Content
+                Expanded(
+                  child: IndexedStack(
+                    index: selectedTabIndex,
+                    children: const [
+                      CaseAnalysisScreen(),
+                      DocumentReviewScreen(),
+                      // Add more screens here as needed
+                      Placeholder(color: AppColors.lightBlue), // Placeholder for future screens
+                      Placeholder(color: AppColors.lightBlue), // Placeholder for future screens
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _TopBar extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 64,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+       child: Row(
+        children: [
+          // BMW Logo come immagine
+          Image.asset(
+            'assets/images/BMW_logo.png',
+            width: 30,
+            height: 30,
+          ),
+          const SizedBox(width: 16),
+          
+          // Mini Logo come immagine
+          Image.asset(
+            'assets/images/MINI_logo.jpg',
+            width: 40,
+            height: 40,
+          ),
+          const SizedBox(width: 16),
+          
+          // Rolls-Royce Logo come immagine
+          Image.asset(
+            'assets/images/Rolls_Royce_logo.png',
+            width: 40,
+            height: 40,
+          ),
+          
+          // Title
+          const SizedBox(width: 24),
+          const Text(
+            'BMW Group Legal Assistant',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+          ),
+          
+          const Spacer(),
+          
+          // User Avatar on the right
+          _UserAvatar(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBMWLogo() {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.black,
+      ),
+      child: Center(
+        child: Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+            border: Border.all(color: Colors.black, width: 1),
+          ),
+          child: const Center(
+            child: Text(
+              'BMW',
+              style: TextStyle(
+                fontSize: 8,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMiniLogo() {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.black,
+      ),
+      child: const Center(
+        child: Text(
+          'MINI',
+          style: TextStyle(
+            fontSize: 8,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRollsRoyceLogo() {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white,
+        border: Border.all(color: Colors.black, width: 1),
+      ),
+      child: const Center(
+        child: Text(
+          'RR',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
       ),
     );
   }
@@ -52,8 +199,9 @@ class _SideNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Width reduced from 80 to 60
     return Container(
-      width: 80,
+      width: 60,
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -66,12 +214,9 @@ class _SideNavigation extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const SizedBox(height: 48),
-          // BMW Logo
-          _buildBMWLogo(),
-          const SizedBox(height: 40),
+          const SizedBox(height: 24),
           
-          // Navigation Items
+          // Navigation Items (removed the BMW logo from here)
           Expanded(
             child: Column(
               children: [
@@ -87,53 +232,10 @@ class _SideNavigation extends StatelessWidget {
                   isSelected: selectedIndex == 1,
                   onTap: () => onIndexChanged(1),
                 ),
-                _NavItem(
-                  icon: Icons.trending_up_rounded,
-                  label: 'Analytics',
-                  isSelected: selectedIndex == 2,
-                  onTap: () => onIndexChanged(2),
-                ),
-                _NavItem(
-                  icon: Icons.search_rounded,
-                  label: 'Search',
-                  isSelected: selectedIndex == 3,
-                  onTap: () => onIndexChanged(3),
-                ),
               ],
             ),
           ),
-          
-          // User Avatar
-          Padding(
-            padding: const EdgeInsets.only(bottom: 24),
-            child: _UserAvatar(),
-          ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildBMWLogo() {
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: AppColors.blueGradient,
-        ),
-      ),
-      child: Center(
-        child: Text(
-          'BMW',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
-          ),
-        ),
       ),
     );
   }
@@ -169,16 +271,16 @@ class _NavItem extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  width: 40, // Reduced from 48
+                  height: 40, // Reduced from 48
                   decoration: BoxDecoration(
                     color: isSelected ? AppColors.lightBlue : Colors.transparent,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     icon,
                     color: isSelected ? AppColors.bmwBlue : AppColors.textMedium,
-                    size: 24,
+                    size: 20, // Reduced from 24
                   ),
                 ),
               ],
