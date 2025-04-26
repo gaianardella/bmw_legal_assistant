@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bmw_legal_assistant/core/models/case_model.dart';
 import 'package:bmw_legal_assistant/core/theme/colors.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
+// import 'package:url_launcher/url_launcher.dart';
 
 class SimilarCasesCard extends StatelessWidget {
   final List<SimilarCase> similarCases;
@@ -190,22 +190,22 @@ class SimilarCasesCard extends StatelessWidget {
 
   // Nuova funzione per aprire il PDF
   void _openCasePDF(BuildContext context, SimilarCase similarCase) async {
-    // Verifica se è presente un link PDF
-    if (similarCase.pdfLink != null && similarCase.pdfLink!.isNotEmpty) {
-      final Uri url = Uri.parse(similarCase.pdfLink!);
-      try {
-        if (await canLaunchUrl(url)) {
-          await launchUrl(url, mode: LaunchMode.externalApplication);
-        } else {
-          _showPDFErrorSnackBar(context, 'Could not launch PDF');
-        }
-      } catch (e) {
-        _showPDFErrorSnackBar(context, 'Error opening PDF');
-      }
-    } else {
-      // Mostra un messaggio se non c'è un link PDF
-      _showPDFErrorSnackBar(context, 'No PDF available for this case');
-    }
+    // // Verifica se è presente un link PDF
+    // if (similarCase.pdfLink != null && similarCase.pdfLink!.isNotEmpty) {
+    //   final Uri url = Uri.parse(similarCase.pdfLink!);
+    //   try {
+    //     if (await canLaunchUrl(url)) {
+    //       await launchUrl(url, mode: LaunchMode.externalApplication);
+    //     } else {
+    //       _showPDFErrorSnackBar(context, 'Could not launch PDF');
+    //     }
+    //   } catch (e) {
+    //     _showPDFErrorSnackBar(context, 'Error opening PDF');
+    //   }
+    // } else {
+    //   // Mostra un messaggio se non c'è un link PDF
+    //   _showPDFErrorSnackBar(context, 'No PDF available for this case');
+    // }
   }
 
   // Metodo helper per mostrare messaggi di errore

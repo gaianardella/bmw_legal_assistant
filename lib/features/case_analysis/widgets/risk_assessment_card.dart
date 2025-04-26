@@ -105,40 +105,47 @@ class RiskAssessmentCard extends StatelessWidget {
                 color: _getOverallRiskBackgroundColor(riskAssessment.overallRiskLevel),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Row(
+              child: Column(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      _getOverallRiskIcon(riskAssessment.overallRiskLevel),
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  Row(
                     children: [
-                      Text(
-                        'Overall Risk Level: ${riskAssessment.overallRiskLevel.displayName}',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          _getOverallRiskIcon(riskAssessment.overallRiskLevel),
                           color: Colors.white,
-                          fontWeight: FontWeight.w500,
+                          size: 24,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _getOverallRiskDescription(riskAssessment.overallRiskLevel),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.white.withOpacity(0.8),
-                        ),
+                      const SizedBox(width: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Overall Risk Level: ${riskAssessment.overallRiskLevel.displayName}',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _getOverallRiskDescription(riskAssessment.overallRiskLevel),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.white.withOpacity(0.8),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
+                  const SizedBox(height: 12),
+                  // Nuova sezione per la raccomandazione
+                  _buildLitigationRecommendation(context),
                 ],
               ),
             ),
@@ -237,6 +244,31 @@ class RiskAssessmentCard extends StatelessWidget {
       ],
     );
   }
+
+  // Nuova sezione per la raccomandazione di contenzioso
+  Widget _buildLitigationRecommendation(BuildContext context) {
+    return Row(
+      children: [
+        Icon(
+          _getLitigationRecommendationIcon(),
+          color: Colors.white,
+          size: 20,
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            _getLitigationRecommendationText(),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
   
   Color _getRiskColor(RiskLevel level) {
     switch (level) {
@@ -279,6 +311,28 @@ class RiskAssessmentCard extends StatelessWidget {
         return Icons.warning_rounded;
       case RiskLevel.high:
         return Icons.error_rounded;
+    }
+  }
+  
+  IconData _getLitigationRecommendationIcon() {
+    switch (riskAssessment.overallRiskLevel) {
+      case RiskLevel.low:
+        return Icons.gavel_outlined; // Procedi
+      case RiskLevel.medium:
+        return Icons.balance_rounded; // Considera negoziazione
+      case RiskLevel.high:
+        return Icons.exit_to_app_rounded; // Suggerimento di transazione
+    }
+  }
+
+  String _getLitigationRecommendationText() {
+    switch (riskAssessment.overallRiskLevel) {
+      case RiskLevel.low:
+        return 'Recommended: Proceed with confidence, strong case for litigation';
+      case RiskLevel.medium:
+        return 'Recommended: Consider settlement or further negotiation';
+      case RiskLevel.high:
+        return 'Recommended: Prioritize settlement to minimize potential risks';
     }
   }
   

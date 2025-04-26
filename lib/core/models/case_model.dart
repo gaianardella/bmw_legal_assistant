@@ -6,6 +6,7 @@ class CaseModel {
   final CaseType type;
   final DateTime filingDate;
   final RiskAssessment riskAssessment;
+  final String litigationRecommendation;
   final List<String> recommendedStrategies;
   final List<SimilarCase> similarCases;
 
@@ -17,6 +18,7 @@ class CaseModel {
     required this.type,
     required this.filingDate,
     required this.riskAssessment,
+    required this.litigationRecommendation,
     required this.recommendedStrategies,
     required this.similarCases,
     
@@ -30,6 +32,7 @@ class CaseModel {
       type: CaseTypeExtension.fromString(json['type'] as String),
       filingDate: DateTime.parse(json['filing_date'] as String),
       riskAssessment: RiskAssessment.fromJson(json['risk_assessment'] as Map<String, dynamic>),
+      litigationRecommendation: json['litigation_recommendation'],
       recommendedStrategies: (json['recommended_strategies'] as List<dynamic>)
           .map((e) => e as String)
           .toList(),
@@ -49,6 +52,7 @@ class CaseModel {
       'type': type.toShortString(),
       'filing_date': filingDate.toIso8601String(),
       'risk_assessment': riskAssessment.toJson(),
+      'litigation_recommendation': litigationRecommendation,
       'recommended_strategies': recommendedStrategies,
       'similar_cases': similarCases.map((e) => e.toJson()).toList(),
     };

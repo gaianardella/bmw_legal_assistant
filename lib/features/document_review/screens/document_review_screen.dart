@@ -25,7 +25,7 @@ class DocumentReviewScreen extends ConsumerWidget {
                 children: [
                   Text(
                     'Document Review',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color: Colors.black,
                       fontWeight: FontWeight.w400,
                     ),

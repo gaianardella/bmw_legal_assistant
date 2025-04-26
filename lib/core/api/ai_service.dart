@@ -63,9 +63,20 @@ Future<CaseModel> analyzeCaseDocument(File document) async {
 - type: one of these values: vehicle_malfunction, warranty, product_liability, intellectual_property, employment, consumer_rights, environmental_claims, data_privacy, financial_dispute, other
 - filing_date: exact filing date of the document (in ISO 8601 format)
 - risk_assessment: object with these fields: overall_risk_score, brand_reputation_risk, legal_complexity_risk, financial_exposure_risk, win_probability_score (all integers 0-100)
+- litigation_recommendation: strategic advice on whether to:
+  * "settle": recommend settling the case out of court
+  * "litigate": recommend proceeding to trial
+  * "further_investigation": recommend gathering more evidence before deciding
 - recommended_strategies: array of string strategies
 - similar_cases: array of objects, each with: id, title, description, type, filing_date, outcome, similarity_score
 
+Provide reasoning for the litigation recommendation based on:
+- Overall risk score
+- Potential financial impact
+- Brand reputation considerations
+- Probability of winning
+- Complexity of legal issues
+ 
 Provide only valid JSON in your response with no additional text or explanations.'''
               }
             ]
@@ -151,6 +162,7 @@ Provide only valid JSON in your response with no additional text or explanations
             financialExposureRisk: formattedData['risk_assessment']['financial_exposure_risk'],
             winProbabilityScore: formattedData['risk_assessment']['win_probability_score'],
           ),
+          litigationRecommendation: claudeData['litigation_recommendation'] ?? 'further_investigation',
           recommendedStrategies: List<String>.from(formattedData['recommended_strategies']),
           similarCases: (formattedData['similar_cases'] as List).map((caseData) => 
             SimilarCase(
@@ -414,6 +426,8 @@ int? _getIntValue(Map<String, dynamic> json, String key) {
         'Cite BMW vs. Müller (2024) precedent',
         'Emphasize warranty limitations for improper use'
       ],
+      litigationRecommendation: "Settle",
+
       similarCases: [
         SimilarCase(
           id: 'BMW-L-2023-0721',
