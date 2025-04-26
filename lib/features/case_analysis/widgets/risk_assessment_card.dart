@@ -77,8 +77,8 @@ class RiskAssessmentCard extends StatelessWidget {
                       _buildRiskBar(
                         context,
                         'Legal Complexity',
-                        riskAssessment.mediaCoverageRisk,
-                        _getRiskColor(riskAssessment.mediaCoverageRiskLevel),
+                        riskAssessment.legalComplexityRisk,
+                        _getRiskColor(riskAssessment.LegalComplexityRiskLevel),
                       ),
                       const SizedBox(height: 16),
                       _buildRiskBar(

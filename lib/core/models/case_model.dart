@@ -8,6 +8,7 @@ class CaseModel {
   final RiskAssessment riskAssessment;
   final List<String> recommendedStrategies;
   final List<SimilarCase> similarCases;
+
   
   CaseModel({
     required this.id,
@@ -18,6 +19,7 @@ class CaseModel {
     required this.riskAssessment,
     required this.recommendedStrategies,
     required this.similarCases,
+    
   });
   
   factory CaseModel.fromJson(Map<String, dynamic> json) {
@@ -36,6 +38,8 @@ class CaseModel {
           .toList(),
     );
   }
+
+  
   
   Map<String, dynamic> toJson() {
     return {
@@ -144,14 +148,14 @@ extension CaseTypeExtension on CaseType {
 class RiskAssessment {
   final int overallRiskScore; // 0-100
   final int brandReputationRisk; // 0-100
-  final int mediaCoverageRisk; // 0-100
+  final int legalComplexityRisk; // 0-100
   final int financialExposureRisk; // 0-100
   final int winProbabilityScore; // 0-100
   
   RiskAssessment({
     required this.overallRiskScore,
     required this.brandReputationRisk,
-    required this.mediaCoverageRisk,
+    required this.legalComplexityRisk,
     required this.financialExposureRisk,
     required this.winProbabilityScore,
   });
@@ -160,7 +164,7 @@ class RiskAssessment {
     return RiskAssessment(
       overallRiskScore: json['overall_risk_score'] as int,
       brandReputationRisk: json['brand_reputation_risk'] as int,
-      mediaCoverageRisk: json['media_coverage_risk'] as int,
+      legalComplexityRisk: json['legal_complexity_risk'] as int,
       financialExposureRisk: json['financial_exposure_risk'] as int,
       winProbabilityScore: json['win_probability_score'] as int,
     );
@@ -170,7 +174,7 @@ class RiskAssessment {
     return {
       'overall_risk_score': overallRiskScore,
       'brand_reputation_risk': brandReputationRisk,
-      'media_coverage_risk': mediaCoverageRisk,
+      'legal_complexity_risk': legalComplexityRisk,
       'financial_exposure_risk': financialExposureRisk,
       'win_probability_score': winProbabilityScore,
     };
@@ -188,9 +192,9 @@ class RiskAssessment {
     return RiskLevel.low;
   }
   
-  RiskLevel get mediaCoverageRiskLevel {
-    if (mediaCoverageRisk >= 70) return RiskLevel.high;
-    if (mediaCoverageRisk >= 40) return RiskLevel.medium;
+  RiskLevel get LegalComplexityRiskLevel {
+    if (legalComplexityRisk >= 70) return RiskLevel.high;
+    if (legalComplexityRisk >= 40) return RiskLevel.medium;
     return RiskLevel.low;
   }
   
@@ -254,6 +258,7 @@ class SimilarCase {
   final DateTime? closingDate;
   final CaseOutcome outcome;
   final double similarityScore; // 0-1, how similar to the current case
+  final String? pdfLink; // Add this line
   
   SimilarCase({
     required this.id,
@@ -264,6 +269,7 @@ class SimilarCase {
     this.closingDate,
     required this.outcome,
     required this.similarityScore,
+    this.pdfLink,
   });
   
   factory SimilarCase.fromJson(Map<String, dynamic> json) {
@@ -278,6 +284,7 @@ class SimilarCase {
           : null,
       outcome: CaseOutcomeExtension.fromString(json['outcome'] as String),
       similarityScore: json['similarity_score'] as double,
+      pdfLink: json['pdf_link'] as String?, // Add this line
     );
   }
   

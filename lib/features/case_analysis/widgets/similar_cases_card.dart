@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bmw_legal_assistant/core/models/case_model.dart';
 import 'package:bmw_legal_assistant/core/theme/colors.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SimilarCasesCard extends StatelessWidget {
   final List<SimilarCase> similarCases;
@@ -28,7 +29,7 @@ class SimilarCasesCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
+          // Header (rimane invariato)
           Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -64,7 +65,7 @@ class SimilarCasesCard extends StatelessWidget {
             ),
           ),
           
-          // See all button
+          // See all button (rimane invariato)
           Padding(
             padding: const EdgeInsets.all(16),
             child: Center(
@@ -85,6 +86,140 @@ class SimilarCasesCard extends StatelessWidget {
     );
   }
 
+  Widget _buildSimilarCaseItem(
+    BuildContext context,
+    SimilarCase similarCase,
+    bool isHighlighted,
+  ) {
+    final dateFormat = DateFormat('MMM yyyy');
+    final backgroundColor = isHighlighted
+        ? AppColors.lightBlue
+        : Colors.transparent;
+    
+    return Container(
+      color: backgroundColor,
+      child: InkWell(
+        onTap: () {
+          // Apertura del PDF se disponibile
+          _openCasePDF(context, similarCase);
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              // Case icon with outcome indicator
+              _buildCaseOutcomeIcon(similarCase.outcome),
+              const SizedBox(width: 16),
+              
+              // Case info (rimane invariato)
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      similarCase.title,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      similarCase.description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _buildInfoChip(
+                          similarCase.type.displayName,
+                          Icons.folder_outlined,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildInfoChip(
+                          similarCase.isClosed
+                              ? '${dateFormat.format(similarCase.filingDate)} - ${dateFormat.format(similarCase.closingDate!)}'
+                              : 'Filed ${dateFormat.format(similarCase.filingDate)}',
+                          Icons.calendar_today_outlined,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Similarity score and arrow (rimane invariato)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.lightBlue,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${(similarCase.similarityScore * 100).toInt()}% match',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.bmwBlue,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: AppColors.bmwBlue,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Nuova funzione per aprire il PDF
+  void _openCasePDF(BuildContext context, SimilarCase similarCase) async {
+    // Verifica se è presente un link PDF
+    if (similarCase.pdfLink != null && similarCase.pdfLink!.isNotEmpty) {
+      final Uri url = Uri.parse(similarCase.pdfLink!);
+      try {
+        if (await canLaunchUrl(url)) {
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+        } else {
+          _showPDFErrorSnackBar(context, 'Could not launch PDF');
+        }
+      } catch (e) {
+        _showPDFErrorSnackBar(context, 'Error opening PDF');
+      }
+    } else {
+      // Mostra un messaggio se non c'è un link PDF
+      _showPDFErrorSnackBar(context, 'No PDF available for this case');
+    }
+  }
+
+  // Metodo helper per mostrare messaggi di errore
+  void _showPDFErrorSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  // Metodi esistenti (_buildCaseOutcomeIcon, _buildInfoChip) rimangono invariati
+}
   Widget _buildSimilarCaseItem(
     BuildContext context,
     SimilarCase similarCase,
@@ -269,4 +404,3 @@ class SimilarCasesCard extends StatelessWidget {
       ),
     );
   }
-}

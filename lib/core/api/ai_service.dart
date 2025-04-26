@@ -62,7 +62,7 @@ Future<CaseModel> analyzeCaseDocument(File document) async {
 - description: brief case description
 - type: one of these values: vehicle_malfunction, warranty, product_liability, intellectual_property, employment, consumer_rights, environmental_claims, data_privacy, financial_dispute, other
 - filing_date: exact filing date of the document (in ISO 8601 format)
-- risk_assessment: object with these fields: overall_risk_score, brand_reputation_risk, media_coverage_risk, financial_exposure_risk, win_probability_score (all integers 0-100)
+- risk_assessment: object with these fields: overall_risk_score, brand_reputation_risk, legal_complexity_risk, financial_exposure_risk, win_probability_score (all integers 0-100)
 - recommended_strategies: array of string strategies
 - similar_cases: array of objects, each with: id, title, description, type, filing_date, outcome, similarity_score
 
@@ -90,7 +90,7 @@ Provide only valid JSON in your response with no additional text or explanations
         final Map<String, dynamic> claudeData = json.decode(jsonString!);
         
         if (kDebugMode) {
-          print("Date fields in response: filing_date=${claudeData['filing_date']}, filingDate=${claudeData['filingDate']}");
+          print("Date fields in response: filing_date=${claudeData['filing_date']}, filing_date=${claudeData['filing_date']}");
         }
         
         // Converti la risposta in un formato compatibile con CaseModel.fromJson
@@ -111,7 +111,7 @@ Provide only valid JSON in your response with no additional text or explanations
           formattedData['risk_assessment'] = {
             'overall_risk_score': riskData['overall_risk_score'],
             'brand_reputation_risk': riskData['brand_reputation_risk'],
-            'media_coverage_risk': riskData['media_coverage_risk'],
+            'legal_complexity_risk': riskData['legal_complexity_risk'],
             'financial_exposure_risk': riskData['financial_exposure_risk'],
             'win_probability_score': riskData['win_probability_score']
           };
@@ -147,7 +147,7 @@ Provide only valid JSON in your response with no additional text or explanations
           riskAssessment: RiskAssessment(
             overallRiskScore: formattedData['risk_assessment']['overall_risk_score'],
             brandReputationRisk: formattedData['risk_assessment']['brand_reputation_risk'],
-            mediaCoverageRisk: formattedData['risk_assessment']['media_coverage_risk'],
+            legalComplexityRisk: formattedData['risk_assessment']['legal_complexity_risk'],
             financialExposureRisk: formattedData['risk_assessment']['financial_exposure_risk'],
             winProbabilityScore: formattedData['risk_assessment']['win_probability_score'],
           ),
@@ -211,7 +211,7 @@ Map<String, dynamic> _transformClaudeResponse(Map<String, dynamic> claudeData) {
         'title': caseItem['title'] ?? 'Unknown Case',
         'description': caseItem['description'] ?? '',
         'type': _normalizeCaseType(caseItem['type']),
-        'filing_date': caseItem['filingDate'] ?? DateTime.now().toIso8601String(),
+        'filing_date': caseItem['filing_date'] ?? DateTime.now().toIso8601String(),
         'outcome': caseItem['outcome'] ?? 'unknown',
         'similarity_score': (caseItem['similarityScore'] ?? 0.7) as double,
       });
@@ -224,13 +224,13 @@ Map<String, dynamic> _transformClaudeResponse(Map<String, dynamic> claudeData) {
     'title': claudeData['title'] ?? 'Unknown Case',
     'description': claudeData['description'] ?? '',
     'type': _normalizeCaseType(claudeData['type']),
-    'filing_date': claudeData['filingDate'] ?? DateTime.now().toIso8601String(),
+    'filing_date': claudeData['filing_date'] ?? DateTime.now().toIso8601String(),
     'risk_assessment': {
       'overall_risk_score': _getIntValue(riskData, 'overall') ?? 
                           _getIntValue(riskData, 'overallRisk') ?? 50,
       'brand_reputation_risk': _getIntValue(riskData, 'reputationalRisk') ?? 
                              _getIntValue(riskData, 'brandReputationRisk') ?? 50,
-      'media_coverage_risk': _getIntValue(riskData, 'mediaCoverageRisk') ?? 50,
+      'legal_complexity_risk': _getIntValue(riskData, 'legalComplexityRisk') ?? 50,
       'financial_exposure_risk': _getIntValue(riskData, 'financialRisk') ?? 
                                _getIntValue(riskData, 'financialExposureRisk') ?? 50,
       'win_probability_score': _getIntValue(riskData, 'legalRisk') ?? 
@@ -404,7 +404,7 @@ int? _getIntValue(Map<String, dynamic> json, String key) {
       riskAssessment: RiskAssessment(
         overallRiskScore: 65,
         brandReputationRisk: 70,
-        mediaCoverageRisk: 45,
+        legalComplexityRisk: 45,
         financialExposureRisk: 80,
         winProbabilityScore: 72,
       ),
