@@ -47,48 +47,239 @@ Future<CaseModel> analyzeCaseDocument(File document) async {
             'role': 'user',
             'content': [
               {
-                'type': 'text',
-                'text': '''Analyze this legal document and provide a JSON with the following mandatory fields:
-- id: a unique identifier generated
-- title: case title
-- description: brief case description
-- type: case type (choose from CaseType enum)
-- filingDate: exact filing date of the document (in ISO 8601 format)
-- riskAssessment: risk assessment with scores from 0 to 100
-- recommendedStrategies: array of recommended strategies
-- similarCases: array of similar cases
-
-If you cannot find a specific filing date, use the current date.'''
+                'type': 'document',
+                'source': {
+                  'type': 'base64',
+                  'media_type': 'application/pdf',
+                  'data': base64File
+                }
               },
               {
-                'type': 'file',
-                'content': base64File,
-                'media_type': 'application/pdf'
+                'type': 'text',
+                'text': '''Analyze this legal document and provide a JSON with the following fields exactly as specified:
+- id: a unique identifier
+- title: case title
+- description: brief case description
+- type: one of these values: vehicle_malfunction, warranty, product_liability, intellectual_property, employment, consumer_rights, environmental_claims, data_privacy, financial_dispute, other
+- filing_date: exact filing date of the document (in ISO 8601 format)
+- risk_assessment: object with these fields: overall_risk_score, brand_reputation_risk, media_coverage_risk, financial_exposure_risk, win_probability_score (all integers 0-100)
+- recommended_strategies: array of string strategies
+- similar_cases: array of objects, each with: id, title, description, type, filing_date, outcome, similarity_score
+
+Provide only valid JSON in your response with no additional text or explanations.'''
               }
             ]
           }
         ]
       },
     );
+    
     if (kDebugMode) {
-  print('Full Claude Response: ${response.data}');
-  }
+      print('Full Claude Response: ${response.data}');
+    }
     
     if (response.statusCode == 200) {
-      final responseContent = response.data['content'][0]['text'];
-      final Map<String, dynamic> caseData = json.decode(responseContent);
+      final responseText = response.data['content'][0]['text'];
       
-      return CaseModel.fromJson(caseData);
+      // Estrai solo la parte JSON dalla risposta
+      final jsonPattern = RegExp(r'\{[\s\S]*?\}(?=\s*Note:|$)');
+      final match = jsonPattern.firstMatch(responseText);
+      
+      if (match != null) {
+        final jsonString = match.group(0);
+        final Map<String, dynamic> claudeData = json.decode(jsonString!);
+        
+        if (kDebugMode) {
+          print("Date fields in response: filing_date=${claudeData['filing_date']}, filingDate=${claudeData['filingDate']}");
+        }
+        
+        // Converti la risposta in un formato compatibile con CaseModel.fromJson
+        Map<String, dynamic> formattedData = {
+          'id': claudeData['id'],
+          'title': claudeData['title'],
+          'description': claudeData['description'],
+          'type': claudeData['type'],
+          'filing_date': claudeData['filing_date'], // Questo è il campo che dobbiamo assicurarci sia corretto
+          'risk_assessment': {},
+          'recommended_strategies': claudeData['recommended_strategies'],
+          'similar_cases': []
+        };
+        
+        // Gestiamo la risk_assessment
+        if (claudeData['risk_assessment'] != null) {
+          Map<String, dynamic> riskData = claudeData['risk_assessment'];
+          formattedData['risk_assessment'] = {
+            'overall_risk_score': riskData['overall_risk_score'],
+            'brand_reputation_risk': riskData['brand_reputation_risk'],
+            'media_coverage_risk': riskData['media_coverage_risk'],
+            'financial_exposure_risk': riskData['financial_exposure_risk'],
+            'win_probability_score': riskData['win_probability_score']
+          };
+        }
+        
+        // Gestiamo i similar_cases
+        if (claudeData['similar_cases'] != null && claudeData['similar_cases'] is List) {
+          List<Map<String, dynamic>> formattedCases = [];
+          for (var caseData in claudeData['similar_cases']) {
+            Map<String, dynamic> formattedCase = {
+              'id': caseData['id'],
+              'title': caseData['title'],
+              'description': caseData['description'],
+              'type': caseData['type'],
+              'filing_date': caseData['filing_date'],
+              'outcome': caseData['outcome']?.toLowerCase() ?? 'unknown',
+              'similarity_score': caseData['similarity_score'] is int 
+                  ? (caseData['similarity_score'] / 100) 
+                  : caseData['similarity_score'] / 100 // Converti a scala 0-1 se necessario
+            };
+            formattedCases.add(formattedCase);
+          }
+          formattedData['similar_cases'] = formattedCases;
+        }
+        
+        // Crea direttamente l'oggetto CaseModel invece di usare fromJson
+        return CaseModel(
+          id: formattedData['id'],
+          title: formattedData['title'],
+          description: formattedData['description'],
+          type: CaseTypeExtension.fromString(formattedData['type']),
+          filingDate: DateTime.parse(formattedData['filing_date']),
+          riskAssessment: RiskAssessment(
+            overallRiskScore: formattedData['risk_assessment']['overall_risk_score'],
+            brandReputationRisk: formattedData['risk_assessment']['brand_reputation_risk'],
+            mediaCoverageRisk: formattedData['risk_assessment']['media_coverage_risk'],
+            financialExposureRisk: formattedData['risk_assessment']['financial_exposure_risk'],
+            winProbabilityScore: formattedData['risk_assessment']['win_probability_score'],
+          ),
+          recommendedStrategies: List<String>.from(formattedData['recommended_strategies']),
+          similarCases: (formattedData['similar_cases'] as List).map((caseData) => 
+            SimilarCase(
+              id: caseData['id'],
+              title: caseData['title'],
+              description: caseData['description'],
+              type: CaseTypeExtension.fromString(caseData['type']),
+              filingDate: DateTime.parse(caseData['filing_date']),
+              outcome: CaseOutcomeExtension.fromString(caseData['outcome']),
+              similarityScore: caseData['similarity_score'].toDouble(),
+            )
+          ).toList(),
+        );
+      } else {
+        throw Exception('Failed to extract JSON from response');
+      }
     } else {
       throw Exception('Failed to analyze case: ${response.statusCode}');
     }
   } catch (e) {
+    if (e is DioException && e.response != null) {
+      print('Error response details: ${e.response?.data}');
+    }
     if (kDebugMode) {
       print('Error analyzing case document: $e');
     }
     
     return _getMockCaseAnalysis();
   }
+}
+
+// Funzione per trasformare la risposta di Claude nel formato atteso dal modello
+Map<String, dynamic> _transformClaudeResponse(Map<String, dynamic> claudeData) {
+  // Estrai e normalizza le informazioni sul rischio
+  final riskData = claudeData['riskAssessment'] as Map<String, dynamic>? ?? {};
+  
+  // Estrai le informazioni sui casi simili e trasformale nel formato corretto
+  final similarCasesRaw = claudeData['similarCases'] as List<dynamic>? ?? [];
+  final List<Map<String, dynamic>> transformedSimilarCases = [];
+  
+  for (var caseItem in similarCasesRaw) {
+    // Se è solo una stringa (titolo del caso)
+    if (caseItem is String) {
+      transformedSimilarCases.add({
+        'id': 'auto-${DateTime.now().millisecondsSinceEpoch}-${similarCasesRaw.indexOf(caseItem)}',
+        'title': caseItem,
+        'description': 'Similar case referenced by Claude',
+        'type': 'other',
+        'filing_date': DateTime.now().subtract(const Duration(days: 365)).toIso8601String(),
+        'outcome': 'unknown',
+        'similarity_score': 0.7,
+      });
+    } 
+    // Se è già un oggetto completo
+    else if (caseItem is Map<String, dynamic>) {
+      transformedSimilarCases.add({
+        'id': caseItem['id'] ?? 'unknown',
+        'title': caseItem['title'] ?? 'Unknown Case',
+        'description': caseItem['description'] ?? '',
+        'type': _normalizeCaseType(caseItem['type']),
+        'filing_date': caseItem['filingDate'] ?? DateTime.now().toIso8601String(),
+        'outcome': caseItem['outcome'] ?? 'unknown',
+        'similarity_score': (caseItem['similarityScore'] ?? 0.7) as double,
+      });
+    }
+  }
+  
+  // Crea il nuovo oggetto JSON nel formato atteso
+  return {
+    'id': claudeData['id'] ?? 'unknown',
+    'title': claudeData['title'] ?? 'Unknown Case',
+    'description': claudeData['description'] ?? '',
+    'type': _normalizeCaseType(claudeData['type']),
+    'filing_date': claudeData['filingDate'] ?? DateTime.now().toIso8601String(),
+    'risk_assessment': {
+      'overall_risk_score': _getIntValue(riskData, 'overall') ?? 
+                          _getIntValue(riskData, 'overallRisk') ?? 50,
+      'brand_reputation_risk': _getIntValue(riskData, 'reputationalRisk') ?? 
+                             _getIntValue(riskData, 'brandReputationRisk') ?? 50,
+      'media_coverage_risk': _getIntValue(riskData, 'mediaCoverageRisk') ?? 50,
+      'financial_exposure_risk': _getIntValue(riskData, 'financialRisk') ?? 
+                               _getIntValue(riskData, 'financialExposureRisk') ?? 50,
+      'win_probability_score': _getIntValue(riskData, 'legalRisk') ?? 
+                             _getIntValue(riskData, 'winProbabilityScore') ?? 50,
+    },
+    'recommended_strategies': (claudeData['recommendedStrategies'] as List<dynamic>?)
+        ?.map((e) => e.toString())
+        .toList() ?? [],
+    'similar_cases': transformedSimilarCases,
+  };
+}
+
+// Helper per normalizzare il tipo del caso
+String _normalizeCaseType(dynamic typeValue) {
+  if (typeValue == null) return 'other';
+  
+  String typeStr = typeValue.toString().toLowerCase();
+  
+  // Mappa i possibili valori restituiti da Claude ai valori attesi
+  switch (typeStr) {
+    case 'consumer_protection':
+    case 'consumerprotection':
+      return 'consumer_rights';
+    case 'vehicle_malfunction':
+    case 'vehiclemalfunction':
+      return 'vehicle_malfunction';
+    // Aggiungi altri casi secondo necessità...
+    default:
+      if (typeStr.contains('warranty')) return 'warranty';
+      if (typeStr.contains('intellectual')) return 'intellectual_property';
+      if (typeStr.contains('consumer')) return 'consumer_rights';
+      if (typeStr.contains('environment')) return 'environmental_claims';
+      if (typeStr.contains('data')) return 'data_privacy';
+      if (typeStr.contains('financial')) return 'financial_dispute';
+      if (typeStr.contains('product')) return 'product_liability';
+      if (typeStr.contains('employment')) return 'employment';
+      
+      return 'other';
+  }
+}
+
+// Helper per estrarre valori int in modo sicuro
+int? _getIntValue(Map<String, dynamic> json, String key) {
+  final value = json[key];
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is String) return int.tryParse(value);
+  if (value is double) return value.toInt();
+  return null;
 }
   
   // Generate a document draft based on case details

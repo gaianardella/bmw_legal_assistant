@@ -20,7 +20,7 @@ class AppShell extends ConsumerWidget {
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
       colors: [
-        Color(0xFFA2CAFE), // azzurro chiaro
+        Color(0xFF1D5A6C), // azzurro chiaro
         Color(0xFF004AAD), // blu intenso
       ],
     ),

@@ -65,6 +65,7 @@ class CaseAnalysisScreen extends ConsumerWidget {
     }
     
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: CustomScrollView(
         slivers: [
           // Header
@@ -75,28 +76,28 @@ class CaseAnalysisScreen extends ConsumerWidget {
             elevation: 0,
             backgroundColor: Colors.white,
             flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-              title: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Case Analysis',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                  if (caseAnalysis != null)
-                    Text(
-                      caseAnalysis.id,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                ],
-              ),
-            ),
+  titlePadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+  title: Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        'Case Analysis',
+        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+          color: Colors.black,
+          fontWeight: FontWeight.w400,
+        ),
+      ),
+      if (caseAnalysis != null)
+        Text(
+          caseAnalysis.id,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Colors.grey[600],
+          ),
+        ),
+    ],
+  ),
+),
           ),
           
           // Main Content
@@ -123,15 +124,15 @@ class CaseAnalysisScreen extends ConsumerWidget {
                     RecommendedStrategiesCard(caseModel: caseAnalysis),
                   ],
                   
-                  // Add some bottom padding
-                  const SizedBox(height: 80),
+                  // Add padding at the bottom to prevent overflow with FAB
+                  SizedBox(height: MediaQuery.of(context).padding.bottom + 100),
                 ],
               ),
             ),
           ),
         ],
       ),
-       // Floating action button to reset analysis
+      // Floating action button to reset analysis
       floatingActionButton: caseAnalysis != null 
         ? FloatingActionButton(
             onPressed: resetAnalysis,
