@@ -24,7 +24,7 @@ class DocumentReviewScreen extends ConsumerStatefulWidget {
 
 class _DocumentReviewScreenState extends ConsumerState<DocumentReviewScreen> {
   final TextEditingController _documentController = TextEditingController();
-  DocumentType _selectedDocumentType = DocumentType.klageerwiderung; // Using an actual type from your enum
+  DocumentType _selectedDocumentType = DocumentType.statementOfDefense; // Using an actual type from your enum
   
   @override
   void dispose() {

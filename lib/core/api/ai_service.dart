@@ -308,9 +308,9 @@ Future<DocumentModel> generateDocumentDraft(String caseId, DocumentType document
     String documentPrompt = "";
     
     switch (documentType) {
-      case DocumentType.klageerwiderung:
+      case DocumentType.statementOfDefense:
         documentPrompt = '''
-You are an expert lawyer working for BMW. Create a formal legal response (Klageerwiderung) for the following case:
+You are an expert lawyer working for BMW. Create a formal legal response (statementOfDefense) for the following case:
 
 Case title: ${caseModel.title}
 Case ID: ${caseModel.id}
@@ -351,9 +351,9 @@ Provide a complete and professional document ready to be submitted to court.
 ''';
         break;
       
-      case DocumentType.legalNotice:
+      case DocumentType.internalMemo:
         documentPrompt = '''
-You are an expert lawyer working for BMW. Create a formal legal notice for the following case:
+You are an expert legal counsel at BMW. Create an internal legal memorandum for the following case:
 
 Case title: ${caseModel.title}
 Case ID: ${caseModel.id}
@@ -361,14 +361,16 @@ Description: ${caseModel.description}
 Case type: ${caseModel.type.toString()}
 Filing date: ${caseModel.filingDate.toString()}
 
-Generate a formal legal notice that:
-1. Clearly states BMW's position
-2. Presents the relevant facts
-3. Cites applicable laws and regulations
-4. Includes a clear request for action or resolution
+Generate a comprehensive internal memo that:
+1. Summarizes the key facts of the case
+2. Analyzes the legal issues and potential risks
+3. Evaluates our position and legal strategy options
+4. Provides recommendations for next steps
+5. Identifies any additional information or evidence needed
+
+The memo should be written in a professional, concise style appropriate for internal circulation among the legal department and relevant executives.
 ''';
         break;
-      
       case DocumentType.settlement:
         documentPrompt = '''
 You are an expert lawyer working for BMW. Create a settlement proposal for the following case:
@@ -391,9 +393,9 @@ Create a settlement proposal that:
 ''';
         break;
         
-      case DocumentType.complaint:
+      case DocumentType.evidence:
         documentPrompt = '''
-You are an expert lawyer working for BMW. Create a complaint response for the following case:
+You are an expert legal counsel at BMW. Create an evidence summary document for the following case:
 
 Case title: ${caseModel.title}
 Case ID: ${caseModel.id}
@@ -401,34 +403,16 @@ Description: ${caseModel.description}
 Case type: ${caseModel.type.toString()}
 Filing date: ${caseModel.filingDate.toString()}
 
-Create a formal complaint response that:
-1. Addresses each allegation point by point
-2. Presents BMW's position on each issue
-3. Cites relevant law, regulations, and precedents
-4. Requests appropriate relief or dismissal
+Generate a comprehensive evidence summary that:
+1. Lists and categorizes all available evidence relevant to the case
+2. Analyzes the strength and admissibility of each piece of evidence
+3. Explains how each evidence item supports or challenges specific claims
+4. Identifies any evidentiary gaps or areas where additional evidence is needed
+5. Provides recommendations for securing additional evidence where appropriate
+
+The document should be structured, detailed, and objective, focusing on factual information and its legal implications.
 ''';
         break;
-        
-      // Add other cases for different document types
-      default:
-        documentPrompt = '''
-You are an expert lawyer working for BMW. Create a legal document for the following case:
-
-Case title: ${caseModel.title}
-Case ID: ${caseModel.id}
-Description: ${caseModel.description}
-Case type: ${caseModel.type.toString()}
-Filing date: ${caseModel.filingDate.toString()}
-
-Risk assessment:
-- Overall risk score: ${caseModel.riskAssessment.overallRiskScore}
-- Brand reputation risk: ${caseModel.riskAssessment.brandReputationRisk}
-- Legal complexity: ${caseModel.riskAssessment.legalComplexityRisk}
-- Financial exposure: ${caseModel.riskAssessment.financialExposureRisk}
-- Win probability: ${caseModel.riskAssessment.winProbabilityScore}
-
-Generate a professional legal document appropriate for this type of case.
-''';
     }
     
     // Make the API call to Claude

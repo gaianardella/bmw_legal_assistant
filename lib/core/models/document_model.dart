@@ -51,77 +51,54 @@ class DocumentModel {
 }
 
 enum DocumentType {
-  klageerwiderung, // Statement of defense
-  legalNotice,
-  settlement,
-  complaint,
-  evidenceSubmission,
-  expertOpinion,
+  statementOfDefense, // Statement of defense
   internalMemo,
-  other,
+  evidence,
+  settlement,
 }
 
 extension DocumentTypeExtension on DocumentType {
   String get displayName {
     switch (this) {
-      case DocumentType.klageerwiderung:
-        return 'Klageerwiderung';
-      case DocumentType.legalNotice:
-        return 'Legal Notice';
-      case DocumentType.settlement:
-        return 'Settlement';
-      case DocumentType.complaint:
-        return 'Complaint';
-      case DocumentType.evidenceSubmission:
-        return 'Evidence Submission';
-      case DocumentType.expertOpinion:
-        return 'Expert Opinion';
+      case DocumentType.statementOfDefense:
+        return 'Statement of Defense';
       case DocumentType.internalMemo:
         return 'Internal Memo';
-      case DocumentType.other:
-        return 'Other';
+      case DocumentType.evidence:
+        return 'Evidence';
+      case DocumentType.settlement:
+        return 'Settlement';
+      default:
+        return toString().split('.').last;
     }
   }
   
   static DocumentType fromString(String value) {
     switch (value) {
-      case 'klageerwiderung':
-        return DocumentType.klageerwiderung;
-      case 'legal_notice':
-        return DocumentType.legalNotice;
-      case 'settlement':
-        return DocumentType.settlement;
-      case 'complaint':
-        return DocumentType.complaint;
-      case 'evidence_submission':
-        return DocumentType.evidenceSubmission;
-      case 'expert_opinion':
-        return DocumentType.expertOpinion;
+      case 'statement_of_defence':
+        return DocumentType.statementOfDefense;
       case 'internal_memo':
         return DocumentType.internalMemo;
+      case 'evidence':
+        return DocumentType.evidence;
+      case 'settlement':
+        return DocumentType.settlement;
       default:
-        return DocumentType.other;
+        // Return a default value or throw an exception for unrecognized values
+        return DocumentType.statementOfDefense; // Using statement of defense as default
     }
   }
   
   String toShortString() {
     switch (this) {
-      case DocumentType.klageerwiderung:
-        return 'klageerwiderung';
-      case DocumentType.legalNotice:
-        return 'legal_notice';
-      case DocumentType.settlement:
-        return 'settlement';
-      case DocumentType.complaint:
-        return 'complaint';
-      case DocumentType.evidenceSubmission:
-        return 'evidence_submission';
-      case DocumentType.expertOpinion:
-        return 'expert_opinion';
+      case DocumentType.statementOfDefense:
+        return 'statement_of_defence';
       case DocumentType.internalMemo:
         return 'internal_memo';
-      case DocumentType.other:
-        return 'other';
+      case DocumentType.evidence:
+        return 'evidence';
+      case DocumentType.settlement:
+        return 'settlement';
     }
   }
 }
