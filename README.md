@@ -1,18 +1,19 @@
-<<<<<<< HEAD
-# bmw_legal_assistant
+# BMW CaseDrive
 
-A new Flutter project.
+## Overview
+BMW CaseDrive is a Flutter-based application designed to assist lawyers in managing legal cases. By utilizing the Claude API, the assistant provides legal insights, risk metrics, and recommendations to help lawyers improve their chances of winning a case. The system also allows for the generation of legal documents such as settlement agreements, statements of defense, internal memos, and evidence, with real-time feedback from Claude.
 
-## Getting Started
+## Features
+- **Legal Insights & Risk Metrics:** Upload legal documents and receive insights, case-winning probabilities, damage estimates, and strategies to improve your case's chances of success.
+  
+- **Case Suggestions:** Get recommendations for similar cases to study, enhancing your understanding of legal precedents and tactics that have worked in similar situations.
 
-This project is a starting point for a Flutter application.
+- **Document Generation:** The system can generate key legal documents such as:
+  - Settlement agreements
+  - Statements of defense
+  - Internal memos
+  - Evidence documents
 
-A few resources to get you started if this is your first Flutter project:
+- **Document Modification and Feedback:** Upload your own legal documents and receive feedback on your modifications, improving the quality and impact of your legal arguments.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
->>>>>>> b61691d (First commit: BMW Legal Assistant)
+- **Real-Time Interaction with Claude API:** The tool interacts with the Claude API to analyze and improve your documents, providing real-time recommendations.
