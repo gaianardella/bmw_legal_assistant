@@ -67,7 +67,7 @@ Future<CaseModel> analyzeCaseDocument(File document) async {
   * "settle": recommend settling the case out of court
   * "litigate": recommend proceeding to trial
   * "further_investigation": recommend gathering more evidence before deciding
-- recommended_strategies: array of string strategies
+- recommended_strategies: array of string strategies to win the case based on what claimes were used on the similar_cases
 - similar_cases: array of objects, each with: id, title, description, type, filing_date, outcome, similarity_score
 
 Provide reasoning for the litigation recommendation based on:
