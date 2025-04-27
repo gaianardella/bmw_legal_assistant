@@ -2,184 +2,120 @@ import 'package:flutter/material.dart';
 import 'package:bmw_legal_assistant/core/models/case_model.dart';
 import 'package:bmw_legal_assistant/core/theme/colors.dart';
 import 'package:intl/intl.dart';
-// import 'package:url_launcher/url_launcher.dart';
 
-class SimilarCasesCard extends StatelessWidget {
-  final List<SimilarCase> similarCases;
+class SimilarCasesDetailView extends StatelessWidget {
+  final SimilarCase similarCase;
 
-  const SimilarCasesCard({
+  const SimilarCasesDetailView({
     super.key,
-    required this.similarCases,
+    required this.similarCase,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: 400, // Fixed width for the side panel
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(-2, 0),
           ),
         ],
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(16),
+          bottomLeft: Radius.circular(16),
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header (rimane invariato)
-          Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Similar Cases',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Previous BMW cases with similar characteristics',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Similar cases list
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: similarCases.length,
-            separatorBuilder: (context, index) => const Divider(height: 1),
-            itemBuilder: (context, index) => _buildSimilarCaseItem(
-              context,
-              similarCases[index],
-              index == 0, // Highlight the most similar case
-            ),
-          ),
-          
-          // See all button (rimane invariato)
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Center(
-              child: TextButton.icon(
-                onPressed: () {
-                  // TODO: Navigate to full similar cases screen
-                },
-                icon: const Icon(Icons.search),
-                label: const Text('Find more similar cases'),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.bmwBlue,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSimilarCaseItem(
-    BuildContext context,
-    SimilarCase similarCase,
-    bool isHighlighted,
-  ) {
-    final dateFormat = DateFormat('MMM yyyy');
-    final backgroundColor = isHighlighted
-        ? AppColors.lightBlue
-        : Colors.transparent;
-    
-    return Container(
-      color: backgroundColor,
-      child: InkWell(
-        onTap: () {
-          // Apertura del PDF se disponibile
-          _openCasePDF(context, similarCase);
-        },
+      child: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Row(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Case icon with outcome indicator
-              _buildCaseOutcomeIcon(similarCase.outcome),
-              const SizedBox(width: 16),
-              
-              // Case info (rimane invariato)
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
+              // Case Title and Outcome
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
                       similarCase.title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.bmwBlue,
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      similarCase.description,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                        height: 1.5,
-                      ),
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        _buildInfoChip(
-                          similarCase.type.displayName,
-                          Icons.folder_outlined,
-                        ),
-                        const SizedBox(width: 8),
-                        _buildInfoChip(
-                          similarCase.isClosed
-                              ? '${dateFormat.format(similarCase.filingDate)} - ${dateFormat.format(similarCase.closingDate!)}'
-                              : 'Filed ${dateFormat.format(similarCase.filingDate)}',
-                          Icons.calendar_today_outlined,
-                        ),
-                      ],
-                    ),
-                  ],
+                  ),
+                  _buildCaseOutcomeIcon(similarCase.outcome),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Comprehensive Case Summary
+              Text(
+                'Comprehensive Case Summary',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[800],
                 ),
               ),
-              
-              // Similarity score and arrow (rimane invariato)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.lightBlue,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${(similarCase.similarityScore * 100).toInt()}% match',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.bmwBlue,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 16,
-                    color: AppColors.bmwBlue,
-                  ),
-                ],
+              const SizedBox(height: 8),
+              Text(
+                _generateDetailedSummary(similarCase),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  height: 1.6,
+                  color: Colors.grey[700],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Detailed Case Information
+              _buildSectionHeader(context, 'Case Details'),
+              _buildDetailRow(
+                context, 
+                'Case Type', 
+                similarCase.type.displayName
+              ),
+              _buildDetailRow(
+                context, 
+                'Filing Date', 
+                DateFormat('dd MMMM yyyy').format(similarCase.filingDate)
+              ),
+              if (similarCase.isClosed) 
+                _buildDetailRow(
+                  context, 
+                  'Closing Date', 
+                  DateFormat('dd MMMM yyyy').format(similarCase.closingDate!)
+                ),
+              _buildDetailRow(
+                context, 
+                'Case Outcome', 
+                _getCaseOutcomeString(similarCase.outcome)
+              ),
+              _buildDetailRow(
+                context, 
+                'Similarity Score', 
+                '${(similarCase.similarityScore * 100).toInt()}%'
+              ),
+
+              // Key Insights Section
+              const SizedBox(height: 16),
+              _buildSectionHeader(context, 'Key Insights'),
+              _buildInsightsList(context, similarCase),
+
+              // Legal Implications
+              const SizedBox(height: 16),
+              _buildSectionHeader(context, 'Legal Implications'),
+              Text(
+                _generateLegalImplications(similarCase),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  height: 1.6,
+                  color: Colors.grey[700],
+                ),
               ),
             ],
           ),
@@ -188,45 +124,404 @@ class SimilarCasesCard extends StatelessWidget {
     );
   }
 
-  // Nuova funzione per aprire il PDF
-  void _openCasePDF(BuildContext context, SimilarCase similarCase) async {
-    // // Verifica se è presente un link PDF
-    // if (similarCase.pdfLink != null && similarCase.pdfLink!.isNotEmpty) {
-    //   final Uri url = Uri.parse(similarCase.pdfLink!);
-    //   try {
-    //     if (await canLaunchUrl(url)) {
-    //       await launchUrl(url, mode: LaunchMode.externalApplication);
-    //     } else {
-    //       _showPDFErrorSnackBar(context, 'Could not launch PDF');
-    //     }
-    //   } catch (e) {
-    //     _showPDFErrorSnackBar(context, 'Error opening PDF');
-    //   }
-    // } else {
-    //   // Mostra un messaggio se non c'è un link PDF
-    //   _showPDFErrorSnackBar(context, 'No PDF available for this case');
-    // }
+  // Generate a detailed summary based on case characteristics
+  String _generateDetailedSummary(SimilarCase similarCase) {
+    // This is a placeholder. In a real app, you'd have more sophisticated logic
+    return '''
+This case represents a significant legal matter involving ${similarCase.type.displayName}. 
+The core legal dispute centers around ${_generateCoreDispute(similarCase)}.
+
+The case provides critical insights into ${_generateInsightDescription(similarCase)}, 
+highlighting the complexities of legal proceedings in this domain.
+''';
   }
 
-  // Metodo helper per mostrare messaggi di errore
-  void _showPDFErrorSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 2),
+  // Helper method to generate core dispute description
+  String _generateCoreDispute(SimilarCase similarCase) {
+    // Example logic - would be more sophisticated in a real implementation
+    switch (similarCase.type) {
+      case CaseType.dataPrivacy:
+        return 'data protection regulations and potential privacy violations';
+      case CaseType.intellectualProperty:
+        return 'trademark, patent, or copyright protection and potential infringements';
+      case CaseType.consumerRights:
+        return 'consumer protection laws and potential product-related disputes';
+      case CaseType.productLiability:
+        return 'product safety and manufacturer responsibilities';
+      default:
+        return 'legal complexities within the BMW legal framework';
+    }
+  }
+
+  // Generate insight description
+  String _generateInsightDescription(SimilarCase similarCase) {
+    switch (similarCase.outcome) {
+      case CaseOutcome.won:
+        return 'successful legal strategies and key arguments that led to a favorable outcome';
+      case CaseOutcome.lost:
+        return 'potential legal vulnerabilities and areas for improvement';
+      case CaseOutcome.settled:
+        return 'negotiation tactics and compromise strategies';
+      case CaseOutcome.dismissed:
+        return 'procedural nuances and legal technicalities';
+      case CaseOutcome.pending:
+        return 'ongoing legal challenges and potential future implications';
+      default:
+        return 'legal precedents and strategic considerations';
+    }
+  }
+
+  // Generate legal implications
+  String _generateLegalImplications(SimilarCase similarCase) {
+    return '''
+The implications of this case extend beyond its immediate context. 
+Key takeaways include potential impacts on:
+- Future legal strategies
+- Risk management approaches
+- Compliance protocols
+- Potential policy modifications
+
+Understanding the nuanced details of this case can provide valuable 
+insights for proactive legal decision-making within the organization.
+''';
+  }
+
+  // Build a list of key insights
+  Widget _buildInsightsList(BuildContext context, SimilarCase similarCase) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildInsightItem(
+          context, 
+          Icons.lightbulb_outline,
+          'Strategic Significance',
+          _generateStrategicInsight(similarCase),
+        ),
+        _buildInsightItem(
+          context, 
+          Icons.account_balance_outlined,
+          'Legal Precedent',
+          _generatePrecedentInsight(similarCase),
+        ),
+        _buildInsightItem(
+          context, 
+          Icons.warning_outlined,
+          'Risk Assessment',
+          _generateRiskInsight(similarCase),
+        ),
+      ],
+    );
+  }
+
+  // Generate strategic insight
+  String _generateStrategicInsight(SimilarCase similarCase) {
+    switch (similarCase.type) {
+      case CaseType.dataPrivacy:
+        return 'data protection regulations and potential privacy violations';
+      case CaseType.intellectualProperty:
+        return 'trademark, patent, or copyright protection and potential infringements';
+      case CaseType.consumerRights:
+        return 'consumer protection laws and potential product-related disputes';
+      case CaseType.productLiability:
+        return 'product safety and manufacturer responsibilities';
+      default:
+        return 'legal complexities within the BMW legal framework';
+    }
+  }
+
+  // Generate precedent insight
+  String _generatePrecedentInsight(SimilarCase similarCase) {
+    switch (similarCase.outcome) {
+      case CaseOutcome.won:
+        return 'Establishes a favorable legal precedent for similar future cases.';
+      case CaseOutcome.lost:
+        return 'Identifies potential legal vulnerabilities to address proactively.';
+      case CaseOutcome.settled:
+        return 'Demonstrates the value of negotiation and compromise.';
+      case CaseOutcome.dismissed:
+        return 'Highlights the importance of procedural compliance.';
+      case CaseOutcome.pending:
+        return 'Indicates ongoing legal complexity and potential future developments.';
+      default:
+        return 'Offers insights into legal strategic decision-making.';
+    }
+  }
+
+  // Generate risk insight
+  String _generateRiskInsight(SimilarCase similarCase) {
+    return 'Provides a comprehensive assessment of potential legal and operational risks.';
+  }
+
+  // Build an individual insight item
+  Widget _buildInsightItem(
+    BuildContext context, 
+    IconData icon, 
+    String title, 
+    String description,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            icon,
+            color: AppColors.bmwBlue,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey[700],
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // Metodi esistenti (_buildCaseOutcomeIcon, _buildInfoChip) rimangono invariati
+  // Helper method to convert CaseOutcome to readable string
+  String _getCaseOutcomeString(CaseOutcome outcome) {
+    switch (outcome) {
+      case CaseOutcome.won:
+        return 'Successful Outcome';
+      case CaseOutcome.lost:
+        return 'Unfavorable Outcome';
+      case CaseOutcome.settled:
+        return 'Negotiated Settlement';
+      case CaseOutcome.dismissed:
+        return 'Case Dismissed';
+      case CaseOutcome.pending:
+        return 'Ongoing Proceedings';
+      case CaseOutcome.unknown:
+        return 'Default Case Analysis';
+    }
+  }
+
+  // Build a section header
+  Widget _buildSectionHeader(BuildContext context, String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: AppColors.bmwBlue,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  // Build a detail row
+  Widget _buildDetailRow(BuildContext context, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[700],
+            ),
+          ),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[900],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Build case outcome icon
+  Widget _buildCaseOutcomeIcon(CaseOutcome outcome) {
+    Color backgroundColor;
+    Color iconColor;
+    IconData icon;
+    
+    switch (outcome) {
+      case CaseOutcome.won:
+        backgroundColor = AppColors.successGreen.withOpacity(0.1);
+        iconColor = AppColors.successGreen;
+        icon = Icons.check_circle_outline_rounded;
+        break;
+      case CaseOutcome.lost:
+        backgroundColor = AppColors.errorRed.withOpacity(0.1);
+        iconColor = AppColors.errorRed;
+        icon = Icons.cancel_outlined;
+        break;
+      case CaseOutcome.settled:
+        backgroundColor = Colors.purple.withOpacity(0.1);
+        iconColor = Colors.purple;
+        icon = Icons.handshake_outlined;
+        break;
+      case CaseOutcome.dismissed:
+        backgroundColor = Colors.orange.withOpacity(0.1);
+        iconColor = Colors.orange;
+        icon = Icons.gavel_rounded;
+        break;
+      case CaseOutcome.pending:
+        backgroundColor = Colors.grey.withOpacity(0.1);
+        iconColor = Colors.grey;
+        icon = Icons.hourglass_empty_rounded;
+        break;
+      case CaseOutcome.unknown:
+        backgroundColor = AppColors.bmwBlue.withOpacity(0.1);
+        iconColor = AppColors.bmwBlue;
+        icon = Icons.info_outline_rounded;
+        break;
+    }
+    
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(
+        icon,
+        color: iconColor,
+        size: 24,
+      ),
+    );
+  }
 }
+
+// Updated SimilarCasesCard to support side panel
+class SimilarCasesCard extends StatefulWidget {
+  final List<SimilarCase> similarCases;
+
+  const SimilarCasesCard({
+    super.key,
+    required this.similarCases,
+  });
+
+  @override
+  _SimilarCasesCardState createState() => _SimilarCasesCardState();
+}
+
+class _SimilarCasesCardState extends State<SimilarCasesCard> {
+  SimilarCase? _selectedCase;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        // Similar Cases List
+        Expanded(
+          flex: 3,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Similar Cases',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Previous BMW cases with similar characteristics',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Similar cases list
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: widget.similarCases.length,
+                  separatorBuilder: (context, index) => const Divider(height: 1),
+                  itemBuilder: (context, index) => _buildSimilarCaseItem(
+                    context,
+                    widget.similarCases[index],
+                    widget.similarCases[index] == _selectedCase,
+                  ),
+                ),
+                
+                // See all button
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Center(
+                    child: TextButton.icon(
+                      onPressed: () {
+                        // TODO: Navigate to full similar cases screen
+                      },
+                      icon: const Icon(Icons.search),
+                      label: const Text('Find more similar cases'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.bmwBlue,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Case Details Panel
+        if (_selectedCase != null)
+          Expanded(
+            flex: 2,
+            child: SimilarCasesDetailView(similarCase: _selectedCase!),
+          ),
+      ],
+    );
+  }
+
   Widget _buildSimilarCaseItem(
     BuildContext context,
     SimilarCase similarCase,
-    bool isHighlighted,
+    bool isSelected,
   ) {
     final dateFormat = DateFormat('MMM yyyy');
-    final backgroundColor = isHighlighted
+    final backgroundColor = isSelected
         ? AppColors.lightBlue
         : Colors.transparent;
     
@@ -234,7 +529,10 @@ class SimilarCasesCard extends StatelessWidget {
       color: backgroundColor,
       child: InkWell(
         onTap: () {
-          // TODO: Show case details in a dialog or navigate to case details
+          // Update the selected case
+          setState(() {
+            _selectedCase = similarCase;
+          });
         },
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -321,6 +619,7 @@ class SimilarCasesCard extends StatelessWidget {
     );
   }
 
+  // Existing utility methods like _buildCaseOutcomeIcon and _buildInfoChip from previous implementation
   Widget _buildCaseOutcomeIcon(CaseOutcome outcome) {
     Color backgroundColor;
     Color iconColor;
@@ -353,9 +652,9 @@ class SimilarCasesCard extends StatelessWidget {
         icon = Icons.hourglass_empty_rounded;
         break;
       case CaseOutcome.unknown:
-        backgroundColor = Colors.grey.withOpacity(0.1);
-        iconColor = Colors.grey;
-        icon = Icons.help_outline_rounded;
+        backgroundColor = AppColors.bmwBlue.withOpacity(0.1);
+        iconColor = AppColors.bmwBlue;
+        icon = Icons.info_outline_rounded;
         break;
     }
     
@@ -404,3 +703,4 @@ class SimilarCasesCard extends StatelessWidget {
       ),
     );
   }
+}
