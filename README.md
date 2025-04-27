@@ -1,4 +1,4 @@
-# BMW CaseDrive
+# BMW CaseDrive 🚗
 
 ## Overview
 BMW CaseDrive is a Flutter-based application designed to assist lawyers in managing legal cases. By utilizing the Claude API, the assistant provides legal insights, risk metrics, and recommendations to help lawyers improve their chances of winning a case. The system also allows for the generation of legal documents such as settlement agreements, statements of defense, internal memos, and evidence, with real-time feedback from Claude.
