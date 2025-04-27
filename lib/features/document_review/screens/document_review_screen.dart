@@ -7,6 +7,9 @@ import 'package:bmw_legal_assistant/core/api/ai_service.dart';
 import 'package:bmw_legal_assistant/core/models/case_model.dart';
 import 'package:bmw_legal_assistant/core/models/document_model.dart';
 import 'package:bmw_legal_assistant/features/case_analysis/screens/case_analysis_screen.dart';
+import 'package:bmw_legal_assistant/features/document_review/widgets/WinProbabilityPath.dart';
+
+
 
 // Document review providers
 final documentProvider = StateProvider<DocumentModel?>((ref) => null);
@@ -361,13 +364,18 @@ Widget build(BuildContext context) {
                         size: 20,
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        'Win probability: ${documentAnalysis.strengthScore}%',
-                        style: TextStyle(
-                          color: AppColors.bmwBlue,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      
+                      // Text(
+                      //   'Win probability: ${documentAnalysis.strengthScore}%',
+                      //   style: TextStyle(
+                      //     color: AppColors.bmwBlue,
+                      //     fontWeight: FontWeight.w600,
+                      //   ),
+                      // ),
+                      if (documentAnalysis != null)
+  WinProbabilityPath(
+    strengthScore: documentAnalysis.strengthScore.toDouble(),
+  ),
                     ],
                   ),
                 ),
