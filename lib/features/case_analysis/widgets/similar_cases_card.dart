@@ -87,7 +87,7 @@ class _SimilarCasesCardState extends State<SimilarCasesCard> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Previous BMW cases with similar characteristics',
+                  'Previous cases with similar characteristics',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.grey[600],
                     fontSize: isMobile ? 12 : null, // Ridotto font su mobile

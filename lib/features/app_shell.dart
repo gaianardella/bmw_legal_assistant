@@ -163,7 +163,7 @@ class _TopBar extends StatelessWidget {
           const SizedBox(width: 24),
           Expanded(
             child: Text(
-              isSmallScreen ? 'BMW Legal' : 'BMW Group Legal Assistant',
+              isSmallScreen ? 'BMW CaseDrive' : 'BMW CaseDrive',
               style: TextStyle(
                 fontSize: isMobile ? 20 : 18,  // Font size aumentato su mobile
                 fontWeight: FontWeight.w500,

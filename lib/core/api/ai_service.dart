@@ -68,8 +68,7 @@ Future<CaseModel> analyzeCaseDocument(File document) async {
   * "litigate": recommend proceeding to trial
   * "further_investigation": recommend gathering more evidence before deciding
 - recommended_strategies: array of string strategies to win the case based on what claimes were used on the similar_cases
-- similar_cases: array of objects, each with: id, title, description, type, filing_date, outcome, similarity_score
-
+- similar_cases: array of objects, each with: id, title, description, type, filing_date, outcome, similarity_score. Prioritize finding similar BMW cases first. If not enough relevant BMW cases are found, you may include cases from other automotive companies or industrial sector that are relevant to the described situation.
 Provide reasoning for the litigation recommendation based on:
 - Overall risk score
 - Potential financial impact
