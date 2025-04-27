@@ -111,10 +111,17 @@ class _TopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     // Make top bar responsive
     final isSmallScreen = MediaQuery.of(context).size.width < 600;
+    final isMobilePlatform = !kIsWeb && (Platform.isIOS || Platform.isAndroid);
+    final isMobile = isSmallScreen || isMobilePlatform;
 
     return Container(
-      height: 64,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      // Aumenta l'altezza solo per dispositivi mobili
+      height: isMobile ? 150 : 64,
+      padding: EdgeInsets.symmetric(
+        horizontal: 16,
+        // Aggiunto padding verticale per il mobile
+        vertical: isMobile ? 10 : 0,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -130,8 +137,8 @@ class _TopBar extends StatelessWidget {
           // BMW Logo
           Image.asset(
             'assets/images/BMW_logo.png',
-            width: 30,
-            height: 30,
+            width: isMobile ? 40 : 30,
+            height: isMobile ? 40 : 30,
           ),
           
           // Only show additional logos on larger screens
@@ -158,7 +165,7 @@ class _TopBar extends StatelessWidget {
             child: Text(
               isSmallScreen ? 'BMW Legal' : 'BMW Group Legal Assistant',
               style: TextStyle(
-                fontSize: isSmallScreen ? 16 : 18,
+                fontSize: isMobile ? 20 : 18,  // Font size aumentato su mobile
                 fontWeight: FontWeight.w500,
                 color: Colors.black87,
               ),

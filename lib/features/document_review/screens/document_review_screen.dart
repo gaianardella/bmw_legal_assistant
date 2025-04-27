@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io' show Platform;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:bmw_legal_assistant/core/theme/colors.dart';
@@ -8,8 +10,6 @@ import 'package:bmw_legal_assistant/core/models/case_model.dart';
 import 'package:bmw_legal_assistant/core/models/document_model.dart';
 import 'package:bmw_legal_assistant/features/case_analysis/screens/case_analysis_screen.dart';
 import 'package:bmw_legal_assistant/features/document_review/widgets/WinProbabilityPath.dart';
-
-
 
 // Document review providers
 final documentProvider = StateProvider<DocumentModel?>((ref) => null);
@@ -29,6 +29,18 @@ class _DocumentReviewScreenState extends ConsumerState<DocumentReviewScreen> {
   final TextEditingController _documentController = TextEditingController();
   DocumentType _selectedDocumentType = DocumentType.statementOfDefense; // Using an actual type from your enum
   
+  // Helper method to determine if we're on a mobile device
+  bool _isMobileDevice(BuildContext context) {
+    // Check if screen width is less than 600 (tablet breakpoint)
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+    
+    // Check if we're on a mobile platform (iOS or Android)
+    final isMobilePlatform = !kIsWeb && (Platform.isIOS || Platform.isAndroid);
+    
+    // Return true if either condition is met
+    return isSmallScreen || isMobilePlatform;
+  }
+  
   @override
   void dispose() {
     _documentController.dispose();
@@ -46,28 +58,34 @@ class _DocumentReviewScreenState extends ConsumerState<DocumentReviewScreen> {
   }
 
   // Update the build method to include both FABs using a Column with FloatingActionButtons
-@override
+  @override
 Widget build(BuildContext context) {
   final caseAnalysis = ref.watch(caseAnalysisProvider);
   final document = ref.watch(documentProvider);
   final isGenerating = ref.watch(isGeneratingDocumentProvider);
   final isAnalyzing = ref.watch(isAnalyzingDocumentProvider);
   final documentAnalysis = ref.watch(documentAnalysisProvider);
+  final isMobile = _isMobileDevice(context);
   
   return Scaffold(
     body: CustomScrollView(
       slivers: [
-        // Header
+        // Header - altezza ridotta su mobile
         SliverAppBar(
-          expandedHeight: 120,
+          expandedHeight: isMobile ? 80 : 120,
           floating: false,
           pinned: true,
           elevation: 0,
           backgroundColor: Colors.white,
           flexibleSpace: FlexibleSpaceBar(
-            titlePadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+            titlePadding: EdgeInsets.fromLTRB(
+              isMobile ? 16 : 24, 
+              0, 
+              isMobile ? 16 : 24, 
+              isMobile ? 8 : 16
+            ),
             title: Column(
-              mainAxisSize: MainAxisSize.min, // Fix overflow issue
+              mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.end,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -76,6 +94,7 @@ Widget build(BuildContext context) {
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: Colors.black,
                     fontWeight: FontWeight.w400,
+                    fontSize: isMobile ? 18 : null, // Font ridotto su mobile
                   ),
                 ),
                 Text(
@@ -84,8 +103,10 @@ Widget build(BuildContext context) {
                       : 'Create or analyze legal documents',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Colors.grey[600],
+                    fontSize: isMobile ? 10 : null, // Font ridotto su mobile
                   ),
                   overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
               ],
             ),
@@ -95,10 +116,10 @@ Widget build(BuildContext context) {
         // Main Content
         SliverToBoxAdapter(
           child: caseAnalysis == null
-              ? _buildNoCaseState(context)
+              ? _buildNoCaseState(context, isMobile)
               : document == null
-                  ? _buildDocumentOptions(context)
-                  : _buildDocumentEditor(context),
+                  ? _buildDocumentOptions(context, isMobile)
+                  : _buildDocumentEditor(context, isMobile),
         ),
       ],
     ),
@@ -106,30 +127,41 @@ Widget build(BuildContext context) {
         ? Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Back to documents button
+              // Back to documents button - ridotto su mobile
               FloatingActionButton.extended(
-                onPressed: () {
+                onPressed: isAnalyzing ? null : () {
                   // Reset document state to return to document options
                   ref.read(documentProvider.notifier).state = null;
                   ref.read(documentAnalysisProvider.notifier).state = null;
                   ref.read(documentContentProvider.notifier).state = '';
                   _documentController.text = '';
                 },
-                icon: const Icon(Icons.arrow_back),
-                label: const Text('Back to Documents'),
-                backgroundColor: Colors.white,
-                foregroundColor: AppColors.bmwBlue,
+                icon: Icon(Icons.arrow_back, size: isMobile ? 16 : 24),
+                label: Text(
+                  isMobile ? 'Back' : 'Back to Documents', 
+                  style: TextStyle(fontSize: isMobile ? 12 : 14),
+                ),
+                backgroundColor: isAnalyzing ? Colors.grey.shade300 : Colors.white,
+                foregroundColor: isAnalyzing ? Colors.grey.shade600 : AppColors.bmwBlue,
                 heroTag: 'back_button',
+                isExtended: !isMobile, // Su mobile usa un FAB compatto
               ),
               const SizedBox(height: 16),
-              // Review document button
+              // Review document button - ridotto su mobile
               FloatingActionButton.extended(
-                onPressed: () => _reviewDocument(context),
-                icon: const Icon(Icons.rate_review_outlined),
-                label: const Text('Review Document'),
-                backgroundColor: AppColors.bmwBlue,
+                onPressed: isAnalyzing ? null : () => _reviewDocument(context),
+                icon: Icon(
+                  isAnalyzing ? Icons.hourglass_bottom : Icons.rate_review_outlined, 
+                  size: isMobile ? 16 : 24
+                ),
+                label: Text(
+                  isAnalyzing ? 'Reviewing...' : (isMobile ? 'Review' : 'Review Document'),
+                  style: TextStyle(fontSize: isMobile ? 12 : 14),
+                ),
+                backgroundColor: isAnalyzing ? Colors.grey.shade400 : AppColors.bmwBlue,
                 foregroundColor: Colors.white,
                 heroTag: 'review_button',
+                isExtended: !isMobile, // Su mobile usa un FAB compatto
               ),
             ],
           )
@@ -138,35 +170,36 @@ Widget build(BuildContext context) {
   );
 }
   
-  Widget _buildNoCaseState(BuildContext context) {
+  Widget _buildNoCaseState(BuildContext context, bool isMobile) {
     return Center(
       child: Container(
-        padding: const EdgeInsets.all(40),
+        padding: EdgeInsets.all(isMobile ? 24 : 40),
         width: double.infinity,
         constraints: const BoxConstraints(maxWidth: 800),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 120,
-              height: 120,
+              width: isMobile ? 80 : 120,
+              height: isMobile ? 80 : 120,
               decoration: BoxDecoration(
                 color: AppColors.lightBlue,
-                borderRadius: BorderRadius.circular(60),
+                borderRadius: BorderRadius.circular(isMobile ? 40 : 60),
               ),
               child: Icon(
                 Icons.description_outlined,
-                size: 60,
+                size: isMobile ? 40 : 60,
                 color: AppColors.bmwBlue.withOpacity(0.5),
               ),
             ),
-            const SizedBox(height: 40),
+            SizedBox(height: isMobile ? 24 : 40),
             
             Text(
               'No Case Selected',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 color: Colors.black,
                 fontWeight: FontWeight.w400,
+                fontSize: isMobile ? 20 : null, // Font ridotto su mobile
               ),
             ),
             const SizedBox(height: 16),
@@ -176,23 +209,27 @@ Widget build(BuildContext context) {
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: Colors.grey[600],
                 height: 1.5,
+                fontSize: isMobile ? 14 : null, // Font ridotto su mobile
               ),  
             ),
-            const SizedBox(height: 40),
+            SizedBox(height: isMobile ? 24 : 40),
             
             ElevatedButton.icon(
               onPressed: () {
                 // Navigate to case analysis screen
                 // You'll need to implement your navigation logic here
               },
-              icon: const Icon(Icons.search),
-              label: const Text('Go to Case Analysis'),
+              icon: Icon(Icons.search, size: isMobile ? 16 : 24),
+              label: Text(
+                'Go to Case Analysis',
+                style: TextStyle(fontSize: isMobile ? 14 : 16),
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.bmwBlue,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
+                padding: EdgeInsets.symmetric(
+                  horizontal: isMobile ? 16 : 24,
+                  vertical: isMobile ? 12 : 16,
                 ),
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -206,226 +243,382 @@ Widget build(BuildContext context) {
     );
   }
   
-  Widget _buildDocumentOptions(BuildContext context) {
-    final caseAnalysis = ref.watch(caseAnalysisProvider);
-    final isGenerating = ref.watch(isGeneratingDocumentProvider);
-    
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.all(40),
-        width: double.infinity,
-        constraints: const BoxConstraints(maxWidth: 800),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Case info
-            if (caseAnalysis != null) ...[
-              Text(
-                caseAnalysis.title,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.black,
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Case ID: ${caseAnalysis.id}',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
-              ),
-              const SizedBox(height: 40),
-            ],
-            
-            // Document options
+  // Modifiche da apportare al metodo _buildDocumentOptions
+Widget _buildDocumentOptions(BuildContext context, bool isMobile) {
+  final caseAnalysis = ref.watch(caseAnalysisProvider);
+  final isGenerating = ref.watch(isGeneratingDocumentProvider);
+  final isAnalyzing = ref.watch(isAnalyzingDocumentProvider);
+  
+  return Center(
+    child: Container(
+      padding: EdgeInsets.all(isMobile ? 24 : 40),
+      width: double.infinity,
+      constraints: const BoxConstraints(maxWidth: 800),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Case info
+          if (caseAnalysis != null) ...[
             Text(
-              'Document Options',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              caseAnalysis.title,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 color: Colors.black,
-                fontWeight: FontWeight.w400,
+                fontWeight: FontWeight.w500,
+                fontSize: isMobile ? 18 : null, // Font ridotto su mobile
               ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Create a new legal document or upload an existing one.',
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Case ID: ${caseAnalysis.id}',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Colors.grey[600],
-                height: 1.5,
+                fontSize: isMobile ? 12 : null, // Font ridotto su mobile
               ),
             ),
-            const SizedBox(height: 24),
-            
-            // Document type selector
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<DocumentType>(
-                  value: _selectedDocumentType,
-                  isExpanded: true,
-                  items: DocumentType.values.map((DocumentType type) {
-                    return DropdownMenuItem<DocumentType>(
-                      value: type,
-                      child: Text(type.displayName),
-                    );
-                  }).toList(),
-                  onChanged: (DocumentType? value) {
-                    if (value != null) {
-                      setState(() {
-                        _selectedDocumentType = value;
-                      });
-                    }
-                  },
-                ),
+            SizedBox(height: isMobile ? 24 : 40),
+          ],
+          
+          // Document options
+          Text(
+            'Document Options',
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              color: Colors.black,
+              fontWeight: FontWeight.w400,
+              fontSize: isMobile ? 20 : null, // Font ridotto su mobile
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Create a new legal document or upload an existing one.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: Colors.grey[600],
+              height: 1.5,
+              fontSize: isMobile ? 14 : null, // Font ridotto su mobile
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // Document type selector
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<DocumentType>(
+                value: _selectedDocumentType,
+                isExpanded: true,
+                items: DocumentType.values.map((DocumentType type) {
+                  return DropdownMenuItem<DocumentType>(
+                    value: type,
+                    child: Text(
+                      type.displayName,
+                      style: TextStyle(fontSize: isMobile ? 14 : 16),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                }).toList(),
+                onChanged: (DocumentType? value) {
+                  if (value != null) {
+                    setState(() {
+                      _selectedDocumentType = value;
+                    });
+                  }
+                },
               ),
             ),
-            const SizedBox(height: 40),
-            
-            // Action buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildActionButton(
-                  context,
-                  'Upload Document',
-                  Icons.upload_file_rounded,
-                  AppColors.bmwBlue,
-                  Colors.white,
-                  () => _pickDocument(context),
+          ),
+          SizedBox(height: isMobile ? 24 : 40),
+          
+          // Indicatore di stato
+          if (isGenerating || isAnalyzing) ...[
+            const SizedBox(height: 10),
+            _buildLoadingIndicator(
+              isGenerating ? 'Generating document with AI...' : 'Analyzing document...',
+              isMobile
+            ),
+            const SizedBox(height: 20),
+          ],
+          
+          // Action buttons - stack vertically su mobile
+          isMobile 
+              ? Column(
+                  children: [
+                    _buildActionButton(
+                      context,
+                      isGenerating ? 'Generating...' : 'Upload Document',
+                      isGenerating ? Icons.hourglass_bottom : Icons.upload_file_rounded,
+                      isGenerating ? Colors.grey.shade400 : AppColors.bmwBlue,
+                      Colors.white,
+                      isGenerating ? null : () => _pickDocument(context),
+                      isMobile: true,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildActionButton(
+                      context,
+                      isGenerating ? 'Generating...' : 'Generate Document',
+                      isGenerating ? Icons.hourglass_bottom : Icons.smart_toy_outlined,
+                      isGenerating ? Colors.grey.shade400 : Colors.white,
+                      isGenerating ? Colors.white : AppColors.bmwBlue,
+                      isGenerating ? null : () => _generateDocument(context),
+                      outlined: true,
+                      isMobile: true,
+                    ),
+                  ],
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildActionButton(
+                      context,
+                      isAnalyzing ? 'Analyzing...' : 'Upload Document',
+                      isAnalyzing ? Icons.hourglass_bottom : Icons.upload_file_rounded,
+                      isAnalyzing ? Colors.grey.shade400 : AppColors.bmwBlue,
+                      Colors.white,
+                      isAnalyzing ? null : () => _pickDocument(context),
+                    ),
+                    const SizedBox(width: 24),
+                    _buildActionButton(
+                      context,
+                      isGenerating ? 'Generating...' : 'Generate Document',
+                      isGenerating ? Icons.hourglass_bottom : Icons.smart_toy_outlined,
+                      isGenerating ? Colors.grey.shade400 : Colors.white,
+                      isGenerating ? Colors.white : AppColors.bmwBlue,
+                      isGenerating ? null : () => _generateDocument(context),
+                      outlined: true,
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 24),
-                _buildActionButton(
-                  context,
-                  'Generate Document',
-                  isGenerating ? Icons.hourglass_bottom : Icons.smart_toy_outlined,
-                  isGenerating ? Colors.grey : Colors.white,
-                  isGenerating ? Colors.white : AppColors.bmwBlue,
-                  isGenerating ? null : () => _generateDocument(context),
-                  outlined: true,
+        ],
+      ),
+    ),
+  );
+}
+
+// Indicatore di caricamento personalizzato
+Widget _buildLoadingIndicator(String message, bool isMobile) {
+  return Column(
+    children: [
+      Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: isMobile ? 16 : 24, 
+          vertical: isMobile ? 10 : 14
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.bmwBlue),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Flexible(
+              child: Text(
+                message,
+                style: TextStyle(
+                  fontSize: isMobile ? 14 : 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[800],
                 ),
-              ],
+              ),
             ),
           ],
         ),
       ),
-    );
-  }
+      const SizedBox(height: 10),
+      Text(
+        "This process may take up to 30 seconds",
+        style: TextStyle(
+          fontSize: isMobile ? 12 : 14,
+          color: Colors.grey[600],
+          fontStyle: FontStyle.italic,
+        ),
+      ),
+    ],
+  );
+}
+
   
-  Widget _buildDocumentEditor(BuildContext context) {
-    final document = ref.watch(documentProvider);
-    final documentAnalysis = ref.watch(documentAnalysisProvider);
-    
-    if (document == null) return const SizedBox.shrink();
-    
-    return Container(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Document title and info
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      document.title,
-                      style: Theme.of(context).textTheme.titleLarge,
+  Widget _buildDocumentEditor(BuildContext context, bool isMobile) {
+  final document = ref.watch(documentProvider);
+  final documentAnalysis = ref.watch(documentAnalysisProvider);
+  final isAnalyzing = ref.watch(isAnalyzingDocumentProvider);
+  
+  if (document == null) return const SizedBox.shrink();
+  
+  return Container(
+    padding: EdgeInsets.all(isMobile ? 16 : 24),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Document title and info
+        isMobile
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Titolo documento
+                  Text(
+                    document.title,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontSize: 16, // Font ridotto su mobile
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Last modified: ${document.lastModified.toString().split('.')[0]}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Last modified: ${document.lastModified.toString().split('.')[0]}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey[600],
+                      fontSize: 10, // Font ridotto su mobile
+                    ),
+                  ),
+                  // Win probability su nuova riga
+                  if (documentAnalysis != null) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.lightBlue,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.trending_up, 
+                            color: AppColors.bmwBlue,
+                            size: 16, // Icona più piccola
+                          ),
+                          const SizedBox(width: 6),
+                          WinProbabilityPath(
+                            strengthScore: documentAnalysis.strengthScore.toDouble(),
+                          ),
+                        ],
                       ),
                     ),
                   ],
-                ),
-              ),
-              if (documentAnalysis != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.lightBlue,
-                    borderRadius: BorderRadius.circular(16),
+                ],
+              )
+            : Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          document.title,
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Last modified: ${document.lastModified.toString().split('.')[0]}',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.trending_up, 
-                        color: AppColors.bmwBlue,
-                        size: 20,
+                  if (documentAnalysis != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.lightBlue,
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      const SizedBox(width: 8),
-                      
-                      // Text(
-                      //   'Win probability: ${documentAnalysis.strengthScore}%',
-                      //   style: TextStyle(
-                      //     color: AppColors.bmwBlue,
-                      //     fontWeight: FontWeight.w600,
-                      //   ),
-                      // ),
-                      if (documentAnalysis != null)
-  WinProbabilityPath(
-    strengthScore: documentAnalysis.strengthScore.toDouble(),
-  ),
-                    ],
-                  ),
-                ),
-            ],
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.trending_up, 
+                            color: AppColors.bmwBlue,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          WinProbabilityPath(
+                            strengthScore: documentAnalysis.strengthScore.toDouble(),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+        SizedBox(height: isMobile ? 16 : 24),
+        
+        // Mostra indicatore di caricamento durante l'analisi
+        if (isAnalyzing)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: _buildLoadingIndicator('Reviewing document with AI...', isMobile),
           ),
-          const SizedBox(height: 24),
-          
-          // Document editor
-          Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: Colors.grey.shade200),
-            ),
-            child: Container(
-              constraints: const BoxConstraints(minHeight: 500),
-              padding: const EdgeInsets.all(16),
-              child: TextField(
-                controller: _documentController,
-                maxLines: null,
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  hintText: 'Enter your document content here...',
-                ),
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  height: 1.6,
-                ),
+        
+        // Document editor
+        Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: Colors.grey.shade200),
+          ),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 500),
+            padding: const EdgeInsets.all(16),
+            child: TextField(
+              controller: _documentController,
+              maxLines: null,
+              enabled: !isAnalyzing, // Disabilita l'editing durante l'analisi
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                hintText: 'Enter your document content here...',
+              ),
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                height: 1.6,
+                fontSize: isMobile ? 14 : null, // Font ridotto su mobile
               ),
             ),
           ),
-          
-          // If we have document analysis feedback, show it
-          if (documentAnalysis != null && documentAnalysis.feedback.isNotEmpty) ...[
-            const SizedBox(height: 24),
-            Text(
-              'Document Feedback',
-              style: Theme.of(context).textTheme.titleMedium,
+        ),
+        
+        // If we have document analysis feedback, show it
+        if (documentAnalysis != null && documentAnalysis.feedback.isNotEmpty) ...[
+          SizedBox(height: isMobile ? 16 : 24),
+          Text(
+            'Document Feedback',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontSize: isMobile ? 16 : null, // Font ridotto su mobile
             ),
-            const SizedBox(height: 16),
-            ...documentAnalysis.feedback.map((feedback) => _buildFeedbackItem(context, feedback)),
-          ],
-          
-          // Add some bottom padding
-          const SizedBox(height: 100),
+          ),
+          const SizedBox(height: 16),
+          ...documentAnalysis.feedback.map((feedback) => _buildFeedbackItem(context, feedback, isMobile)),
         ],
-      ),
-    );
-  }
+        
+        // Add some bottom padding
+        const SizedBox(height: 100),
+      ],
+    ),
+  );
+}
   
-  Widget _buildFeedbackItem(BuildContext context, DocumentFeedback feedback) {
+  Widget _buildFeedbackItem(BuildContext context, DocumentFeedback feedback, bool isMobile) {
     // Using the color from the feedback type extension
     final Color bgColor = feedback.type.color.withOpacity(0.1);
     final Color textColor = feedback.type.color;
@@ -433,7 +626,7 @@ Widget build(BuildContext context) {
     
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isMobile ? 12 : 16),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(8),
@@ -441,8 +634,8 @@ Widget build(BuildContext context) {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: textColor),
-          const SizedBox(width: 16),
+          Icon(icon, color: textColor, size: isMobile ? 18 : 24),
+          SizedBox(width: isMobile ? 12 : 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -452,14 +645,16 @@ Widget build(BuildContext context) {
                   style: TextStyle(
                     color: textColor,
                     fontWeight: FontWeight.w500,
+                    fontSize: isMobile ? 13 : null, // Font ridotto su mobile
                   ),
                 ),
                 if (feedback.suggestion != null) ...[
-                  const SizedBox(height: 8),
+                  SizedBox(height: isMobile ? 6 : 8),
                   Text(
                     'Suggestion: ${feedback.suggestion}',
                     style: TextStyle(
                       color: textColor.withOpacity(0.8),
+                      fontSize: isMobile ? 12 : null, // Font ridotto su mobile
                     ),
                   ),
                 ],
@@ -479,24 +674,31 @@ Widget build(BuildContext context) {
     Color textColor,
     VoidCallback? onPressed, {
     bool outlined = false,
+    bool isMobile = false,
   }) {
-    return ElevatedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon, color: textColor),
-      label: Text(label),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: backgroundColor,
-        foregroundColor: textColor,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 24,
-          vertical: 16,
+    return SizedBox(
+      width: isMobile ? double.infinity : null, // Larghezza completa su mobile
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, color: textColor, size: isMobile ? 18 : 24),
+        label: Text(
+          label,
+          style: TextStyle(fontSize: isMobile ? 14 : 16),
         ),
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
-          side: outlined
-              ? BorderSide(color: AppColors.bmwBlue)
-              : BorderSide.none,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: backgroundColor,
+          foregroundColor: textColor,
+          padding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 16 : 24,
+            vertical: isMobile ? 12 : 16,
+          ),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+            side: outlined
+                ? BorderSide(color: AppColors.bmwBlue)
+                : BorderSide.none,
+          ),
         ),
       ),
     );

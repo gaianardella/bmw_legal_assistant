@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io' show Platform;
 import 'package:bmw_legal_assistant/core/models/case_model.dart';
 import 'package:bmw_legal_assistant/core/theme/colors.dart';
 import 'package:intl/intl.dart';
@@ -16,6 +18,18 @@ class SimilarCasesCard extends StatefulWidget {
 }
 
 class _SimilarCasesCardState extends State<SimilarCasesCard> {
+  // Helper method to determine if we're on a mobile device
+  bool _isMobileDevice(BuildContext context) {
+    // Check if screen width is less than 600 (tablet breakpoint)
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+    
+    // Check if we're on a mobile platform (iOS or Android)
+    final isMobilePlatform = !kIsWeb && (Platform.isIOS || Platform.isAndroid);
+    
+    // Return true if either condition is met
+    return isSmallScreen || isMobilePlatform;
+  }
+  
   void _openCaseDrawer(SimilarCase similarCase) {
     showModalBottomSheet(
       context: context,
@@ -33,6 +47,7 @@ class _SimilarCasesCardState extends State<SimilarCasesCard> {
         builder: (context, scrollController) => SimilarCasesDetailView(
           similarCase: similarCase,
           scrollController: scrollController,
+          isMobile: _isMobileDevice(context),
         ),
       ),
     );
@@ -40,6 +55,8 @@ class _SimilarCasesCardState extends State<SimilarCasesCard> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = _isMobileDevice(context);
+    
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -55,9 +72,9 @@ class _SimilarCasesCardState extends State<SimilarCasesCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
+          // Header - padding ridotto su mobile
           Padding(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(isMobile ? 16 : 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -65,6 +82,7 @@ class _SimilarCasesCardState extends State<SimilarCasesCard> {
                   'Similar Cases',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w500,
+                    fontSize: isMobile ? 18 : null, // Ridotto font su mobile
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -72,6 +90,7 @@ class _SimilarCasesCardState extends State<SimilarCasesCard> {
                   'Previous BMW cases with similar characteristics',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.grey[600],
+                    fontSize: isMobile ? 12 : null, // Ridotto font su mobile
                   ),
                 ),
               ],
@@ -87,19 +106,25 @@ class _SimilarCasesCardState extends State<SimilarCasesCard> {
             itemBuilder: (context, index) => _buildSimilarCaseItem(
               context,
               widget.similarCases[index],
+              isMobile,
             ),
           ),
           
           // See all button
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(isMobile ? 12 : 16),
             child: Center(
               child: TextButton.icon(
                 onPressed: () {
                   // TODO: Navigate to full similar cases screen
                 },
-                icon: const Icon(Icons.search),
-                label: const Text('Find more similar cases'),
+                icon: Icon(Icons.search, size: isMobile ? 16 : 20),
+                label: Text(
+                  'Find more similar cases',
+                  style: TextStyle(
+                    fontSize: isMobile ? 12 : 14,
+                  ),
+                ),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.bmwBlue,
                 ),
@@ -114,6 +139,7 @@ class _SimilarCasesCardState extends State<SimilarCasesCard> {
   Widget _buildSimilarCaseItem(
     BuildContext context,
     SimilarCase similarCase,
+    bool isMobile,
   ) {
     final dateFormat = DateFormat('MMM yyyy');
     
@@ -123,90 +149,189 @@ class _SimilarCasesCardState extends State<SimilarCasesCard> {
         _openCaseDrawer(similarCase);
       },
       child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            // Case icon with outcome indicator
-            _buildCaseOutcomeIcon(similarCase.outcome),
-            const SizedBox(width: 16),
-            
-            // Case info
-            Expanded(
-              child: Column(
+        padding: EdgeInsets.all(isMobile ? 12 : 20),
+        child: isMobile
+            // Layout mobile ottimizzato
+            ? Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    similarCase.title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    similarCase.description,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                      height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
+                  // Prima riga: icona outcome e titolo
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildInfoChip(
-                        similarCase.type.displayName,
-                        Icons.folder_outlined,
+                      _buildCaseOutcomeIcon(similarCase.outcome, isMobile),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              similarCase.title,
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 14, // Font più piccolo su mobile
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            // Punteggio di corrispondenza
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.lightBlue,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                '${(similarCase.similarityScore * 100).toInt()}% match',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: AppColors.bmwBlue,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(width: 8),
-                      _buildInfoChip(
-                        similarCase.isClosed
-                            ? '${dateFormat.format(similarCase.filingDate)} - ${dateFormat.format(similarCase.closingDate!)}'
-                            : 'Filed ${dateFormat.format(similarCase.filingDate)}',
-                        Icons.calendar_today_outlined,
+                      // Freccia
+                      const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 14,
+                        color: AppColors.bmwBlue,
+                      ),
+                    ],
+                  ),
+                  
+                  // Descrizione
+                  Padding(
+                    padding: const EdgeInsets.only(left: 48),
+                    child: Text(
+                      similarCase.description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                        height: 1.3,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                  
+                  // Chip informativi a fondo
+                  const SizedBox(height: 6),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 48),
+                    child: Wrap(
+                      spacing: 6,
+                      children: [
+                        _buildInfoChip(
+                          similarCase.type.displayName,
+                          Icons.folder_outlined,
+                          isMobile,
+                        ),
+                        _buildInfoChip(
+                          similarCase.isClosed
+                              ? 'Closed ${dateFormat.format(similarCase.closingDate!)}'
+                              : 'Filed ${dateFormat.format(similarCase.filingDate)}',
+                          Icons.calendar_today_outlined,
+                          isMobile,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              )
+            
+            // Layout originale per desktop
+            : Row(
+                children: [
+                  // Case icon with outcome indicator
+                  _buildCaseOutcomeIcon(similarCase.outcome, isMobile),
+                  const SizedBox(width: 16),
+                  
+                  // Case info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          similarCase.title,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          similarCase.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey[600],
+                            height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            _buildInfoChip(
+                              similarCase.type.displayName,
+                              Icons.folder_outlined,
+                              isMobile,
+                            ),
+                            const SizedBox(width: 8),
+                            _buildInfoChip(
+                              similarCase.isClosed
+                                  ? '${dateFormat.format(similarCase.filingDate)} - ${dateFormat.format(similarCase.closingDate!)}'
+                                  : 'Filed ${dateFormat.format(similarCase.filingDate)}',
+                              Icons.calendar_today_outlined,
+                              isMobile,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Similarity score and arrow
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.lightBlue,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${(similarCase.similarityScore * 100).toInt()}% match',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.bmwBlue,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 16,
+                        color: AppColors.bmwBlue,
                       ),
                     ],
                   ),
                 ],
               ),
-            ),
-            
-            // Similarity score and arrow
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.lightBlue,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '${(similarCase.similarityScore * 100).toInt()}% match',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.bmwBlue,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 16,
-                  color: AppColors.bmwBlue,
-                ),
-              ],
-            ),
-          ],
-        ),
       ),
     );
   }
 
-  Widget _buildCaseOutcomeIcon(CaseOutcome outcome) {
+  Widget _buildCaseOutcomeIcon(CaseOutcome outcome, bool isMobile) {
     Color backgroundColor;
     Color iconColor;
     IconData icon;
@@ -244,8 +369,12 @@ class _SimilarCasesCardState extends State<SimilarCasesCard> {
         break;
     }
     
+    // Container più piccolo su mobile
+    final padding = isMobile ? 8.0 : 12.0;
+    final iconSize = isMobile ? 18.0 : 24.0;
+    
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(12),
@@ -253,16 +382,22 @@ class _SimilarCasesCardState extends State<SimilarCasesCard> {
       child: Icon(
         icon,
         color: iconColor,
-        size: 24,
+        size: iconSize,
       ),
     );
   }
 
-  Widget _buildInfoChip(String label, IconData icon) {
+  Widget _buildInfoChip(String label, IconData icon, bool isMobile) {
+    // Font e padding ridotti su mobile
+    final horizontalPadding = isMobile ? 6.0 : 8.0;
+    final verticalPadding = isMobile ? 2.0 : 4.0;
+    final fontSize = isMobile ? 9.0 : 10.0;
+    final iconSize = isMobile ? 10.0 : 12.0;
+    
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 4,
+      padding: EdgeInsets.symmetric(
+        horizontal: horizontalPadding,
+        vertical: verticalPadding,
       ),
       decoration: BoxDecoration(
         color: Colors.grey[100],
@@ -273,14 +408,14 @@ class _SimilarCasesCardState extends State<SimilarCasesCard> {
         children: [
           Icon(
             icon,
-            size: 12,
+            size: iconSize,
             color: Colors.grey[600],
           ),
           const SizedBox(width: 4),
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 10,
+            style: TextStyle(
+              fontSize: fontSize,
               color: Colors.grey,
               fontWeight: FontWeight.w500,
             ),
@@ -294,11 +429,13 @@ class _SimilarCasesCardState extends State<SimilarCasesCard> {
 class SimilarCasesDetailView extends StatelessWidget {
   final SimilarCase similarCase;
   final ScrollController? scrollController;
+  final bool isMobile;
 
   const SimilarCasesDetailView({
     super.key,
     required this.similarCase,
     this.scrollController,
+    this.isMobile = false,
   });
 
   @override
@@ -320,7 +457,7 @@ class SimilarCasesDetailView extends StatelessWidget {
       child: SingleChildScrollView(
         controller: scrollController,
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(isMobile ? 16 : 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -340,6 +477,7 @@ class SimilarCasesDetailView extends StatelessWidget {
               // Case Title and Outcome
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Text(
@@ -347,12 +485,14 @@ class SimilarCasesDetailView extends StatelessWidget {
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: AppColors.bmwBlue,
+                        fontSize: isMobile ? 18 : null, // Font più piccolo su mobile
                       ),
-                      maxLines: 2,
+                      maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  _buildCaseOutcomeIcon(similarCase.outcome),
+                  const SizedBox(width: 8),
+                  _buildCaseOutcomeIcon(context, similarCase.outcome),
                 ],
               ),
               const SizedBox(height: 16),
@@ -363,6 +503,7 @@ class SimilarCasesDetailView extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: Colors.grey[800],
+                  fontSize: isMobile ? 15 : null, // Font più piccolo su mobile
                 ),
               ),
               const SizedBox(height: 8),
@@ -371,6 +512,7 @@ class SimilarCasesDetailView extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   height: 1.6,
                   color: Colors.grey[700],
+                  fontSize: isMobile ? 13 : null, // Font più piccolo su mobile
                 ),
               ),
               const SizedBox(height: 16),
@@ -417,6 +559,7 @@ class SimilarCasesDetailView extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   height: 1.6,
                   color: Colors.grey[700],
+                  fontSize: isMobile ? 13 : null, // Font più piccolo su mobile
                 ),
               ),
             ],
@@ -567,7 +710,7 @@ insights for proactive legal decision-making within the organization.
           Icon(
             icon,
             color: AppColors.bmwBlue,
-            size: 24,
+            size: isMobile ? 20 : 24,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -579,6 +722,7 @@ insights for proactive legal decision-making within the organization.
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: Colors.grey[800],
+                    fontSize: isMobile ? 13 : null,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -587,6 +731,7 @@ insights for proactive legal decision-making within the organization.
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.grey[700],
                     height: 1.5,
+                    fontSize: isMobile ? 12 : null,
                   ),
                 ),
               ],
@@ -625,6 +770,7 @@ insights for proactive legal decision-making within the organization.
           fontWeight: FontWeight.w600,
           color: AppColors.bmwBlue,
           letterSpacing: 0.5,
+          fontSize: isMobile ? 15 : null,
         ),
       ),
     );
@@ -633,7 +779,7 @@ insights for proactive legal decision-making within the organization.
   // Build a detail row
   Widget _buildDetailRow(BuildContext context, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: EdgeInsets.symmetric(vertical: isMobile ? 4 : 6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -642,6 +788,7 @@ insights for proactive legal decision-making within the organization.
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w500,
               color: Colors.grey[700],
+              fontSize: isMobile ? 12 : null,
             ),
           ),
           Text(
@@ -649,6 +796,7 @@ insights for proactive legal decision-making within the organization.
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w600,
               color: Colors.grey[900],
+              fontSize: isMobile ? 12 : null,
             ),
           ),
         ],
@@ -656,8 +804,8 @@ insights for proactive legal decision-making within the organization.
     );
   }
 
-  // Build case outcome icon (same as in previous implementation)
-  Widget _buildCaseOutcomeIcon(CaseOutcome outcome) {
+  // Build case outcome icon (con dimensioni adattate)
+  Widget _buildCaseOutcomeIcon(BuildContext context, CaseOutcome outcome) {
     Color backgroundColor;
     Color iconColor;
     IconData icon;
@@ -695,8 +843,11 @@ insights for proactive legal decision-making within the organization.
         break;
     }
     
+    final padding = isMobile ? 10.0 : 12.0;
+    final iconSize = isMobile ? 20.0 : 24.0;
+    
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(12),
@@ -704,7 +855,7 @@ insights for proactive legal decision-making within the organization.
       child: Icon(
         icon,
         color: iconColor,
-        size: 24,
+        size: iconSize,
       ),
     );
   }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io' show Platform;
 import 'package:bmw_legal_assistant/core/models/case_model.dart';
 import 'package:bmw_legal_assistant/core/theme/colors.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
@@ -11,8 +13,22 @@ class RiskAssessmentCard extends StatelessWidget {
     required this.riskAssessment,
   });
 
+  // Helper method to determine if we're on a mobile device
+  bool _isMobileDevice(BuildContext context) {
+    // Check if screen width is less than 600 (tablet breakpoint)
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+    
+    // Check if we're on a mobile platform (iOS or Android)
+    final isMobilePlatform = !kIsWeb && (Platform.isIOS || Platform.isAndroid);
+    
+    // Return true if either condition is met
+    return isSmallScreen || isMobilePlatform;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isMobile = _isMobileDevice(context);
+    
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -28,9 +44,9 @@ class RiskAssessmentCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
+          // Header - padding ridotto su mobile
           Padding(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(isMobile ? 16 : 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -38,6 +54,7 @@ class RiskAssessmentCard extends StatelessWidget {
                   'Risk Assessment',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w500,
+                    fontSize: isMobile ? 18 : null, // Ridotto font su mobile
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -45,106 +62,186 @@ class RiskAssessmentCard extends StatelessWidget {
                   'AI-powered analysis of case risks and win probability',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.grey[600],
+                    fontSize: isMobile ? 12 : null, // Ridotto font su mobile
                   ),
                 ),
               ],
             ),
           ),
 
-          // Risk indicators
+          // Risk indicators - layout modificato per mobile
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Row(
-              children: [
-                // Win probability circular indicator
-                Expanded(
-                  flex: 2,
-                  child: _buildWinProbabilityChart(context),
-                ),
-                const SizedBox(width: 24),
-                // Risk bars
-                Expanded(
-                  flex: 3,
-                  child: Column(
+            padding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 24),
+            child: isMobile
+                // Layout in colonna per mobile
+                ? Column(
                     children: [
-                      _buildRiskBar(
-                        context,
-                        'Brand Reputation',
-                        riskAssessment.brandReputationRisk,
-                        _getRiskColor(riskAssessment.brandReputationRiskLevel),
-                      ),
+                      // Win probability circular indicator centrato
+                      _buildWinProbabilityChart(context),
                       const SizedBox(height: 16),
-                      _buildRiskBar(
-                        context,
-                        'Legal Complexity',
-                        riskAssessment.legalComplexityRisk,
-                        _getRiskColor(riskAssessment.LegalComplexityRiskLevel),
+                      // Risk bars
+                      Column(
+                        children: [
+                          _buildRiskBar(
+                            context,
+                            'Brand Reputation',
+                            riskAssessment.brandReputationRisk,
+                            _getRiskColor(riskAssessment.brandReputationRiskLevel),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildRiskBar(
+                            context,
+                            'Legal Complexity',
+                            riskAssessment.legalComplexityRisk,
+                            _getRiskColor(riskAssessment.LegalComplexityRiskLevel),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildRiskBar(
+                            context,
+                            'Financial Exposure',
+                            riskAssessment.financialExposureRisk,
+                            _getRiskColor(riskAssessment.financialExposureRiskLevel),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 16),
-                      _buildRiskBar(
-                        context,
-                        'Financial Exposure',
-                        riskAssessment.financialExposureRisk,
-                        _getRiskColor(riskAssessment.financialExposureRiskLevel),
+                    ],
+                  )
+                // Layout originale in riga per desktop
+                : Row(
+                    children: [
+                      // Win probability circular indicator
+                      Expanded(
+                        flex: 2,
+                        child: _buildWinProbabilityChart(context),
+                      ),
+                      const SizedBox(width: 24),
+                      // Risk bars
+                      Expanded(
+                        flex: 3,
+                        child: Column(
+                          children: [
+                            _buildRiskBar(
+                              context,
+                              'Brand Reputation',
+                              riskAssessment.brandReputationRisk,
+                              _getRiskColor(riskAssessment.brandReputationRiskLevel),
+                            ),
+                            const SizedBox(height: 16),
+                            _buildRiskBar(
+                              context,
+                              'Legal Complexity',
+                              riskAssessment.legalComplexityRisk,
+                              _getRiskColor(riskAssessment.LegalComplexityRiskLevel),
+                            ),
+                            const SizedBox(height: 16),
+                            _buildRiskBar(
+                              context,
+                              'Financial Exposure',
+                              riskAssessment.financialExposureRisk,
+                              _getRiskColor(riskAssessment.financialExposureRiskLevel),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
           ),
           
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           
-          // Overall risk indicator
+          // Overall risk indicator - padding ridotto su mobile
           Padding(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(isMobile ? 16 : 24),
             child: Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(isMobile ? 12 : 16),
               decoration: BoxDecoration(
                 color: _getOverallRiskBackgroundColor(riskAssessment.overallRiskLevel),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          _getOverallRiskIcon(riskAssessment.overallRiskLevel),
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Overall Risk Level: ${riskAssessment.overallRiskLevel.displayName}',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
+                  isMobile
+                      // Layout in colonna per mobile
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.3),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(
+                                    _getOverallRiskIcon(riskAssessment.overallRiskLevel),
+                                    color: Colors.white,
+                                    size: 18,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'Overall Risk Level: ${riskAssessment.overallRiskLevel.displayName}',
+                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 14, // Font ridotto su mobile
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _getOverallRiskDescription(riskAssessment.overallRiskLevel),
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.white.withOpacity(0.8),
+                            const SizedBox(height: 8),
+                            Text(
+                              _getOverallRiskDescription(riskAssessment.overallRiskLevel),
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Colors.white.withOpacity(0.8),
+                                fontSize: 11, // Font ridotto su mobile
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                          ],
+                        )
+                      // Layout originale in riga per desktop
+                      : Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                _getOverallRiskIcon(riskAssessment.overallRiskLevel),
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Overall Risk Level: ${riskAssessment.overallRiskLevel.displayName}',
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _getOverallRiskDescription(riskAssessment.overallRiskLevel),
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.white.withOpacity(0.8),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                   const SizedBox(height: 12),
-                  // Nuova sezione per la raccomandazione
+                  // Sezione per la raccomandazione
                   _buildLitigationRecommendation(context),
                 ],
               ),
@@ -156,8 +253,10 @@ class RiskAssessmentCard extends StatelessWidget {
   }
   
   Widget _buildWinProbabilityChart(BuildContext context) {
+    final isMobile = _isMobileDevice(context);
+    
     return SizedBox(
-      height: 180,
+      height: isMobile ? 160 : 180, // Altezza ridotta su mobile
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -188,12 +287,14 @@ class RiskAssessmentCard extends StatelessWidget {
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   color: _getWinProbabilityColor(riskAssessment.winProbabilityLevel),
                   fontWeight: FontWeight.w500,
+                  fontSize: isMobile ? 24 : null, // Font ridotto su mobile
                 ),
               ),
               Text(
                 'Win Rate',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Colors.grey[600],
+                  fontSize: isMobile ? 10 : null, // Font ridotto su mobile
                 ),
               ),
             ],
@@ -209,6 +310,8 @@ class RiskAssessmentCard extends StatelessWidget {
     int value,
     Color color,
   ) {
+    final isMobile = _isMobileDevice(context);
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -220,6 +323,7 @@ class RiskAssessmentCard extends StatelessWidget {
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Colors.grey[700],
                 fontWeight: FontWeight.w500,
+                fontSize: isMobile ? 10 : null, // Font ridotto su mobile
               ),
             ),
             Text(
@@ -227,32 +331,35 @@ class RiskAssessmentCard extends StatelessWidget {
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: color,
                 fontWeight: FontWeight.w500,
+                fontSize: isMobile ? 10 : null, // Font ridotto su mobile
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         ClipRRect(
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
             value: value / 100,
             backgroundColor: Colors.grey[200],
             valueColor: AlwaysStoppedAnimation<Color>(color),
-            minHeight: 8,
+            minHeight: isMobile ? 6 : 8, // Altezza ridotta su mobile
           ),
         ),
       ],
     );
   }
 
-  // Nuova sezione per la raccomandazione di contenzioso
+  // Sezione per la raccomandazione di contenzioso
   Widget _buildLitigationRecommendation(BuildContext context) {
+    final isMobile = _isMobileDevice(context);
+    
     return Row(
       children: [
         Icon(
           _getLitigationRecommendationIcon(),
           color: Colors.white,
-          size: 20,
+          size: isMobile ? 16 : 20, // Icona più piccola su mobile
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -261,6 +368,7 @@ class RiskAssessmentCard extends StatelessWidget {
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w500,
+              fontSize: isMobile ? 10 : null, // Font ridotto su mobile
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
