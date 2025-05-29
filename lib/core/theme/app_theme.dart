@@ -98,7 +98,7 @@ class AppTheme {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: AppColors.borderLight),
+        side: const BorderSide(color: AppColors.borderLight),
       ),
       color: Colors.white,
       margin: EdgeInsets.zero,
@@ -120,19 +120,19 @@ class AppTheme {
       fillColor: Colors.grey[50],
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.borderLight),
+        borderSide: const BorderSide(color: AppColors.borderLight),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.borderLight),
+        borderSide: const BorderSide(color: AppColors.borderLight),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.bmwBlue),
+        borderSide: const BorderSide(color: AppColors.bmwBlue),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.errorRed),
+        borderSide: const BorderSide(color: AppColors.errorRed),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     ),
@@ -153,7 +153,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(28),
         ),
-        side: BorderSide(color: AppColors.bmwBlue),
+        side: const BorderSide(color: AppColors.bmwBlue),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
         foregroundColor: AppColors.bmwBlue,
         textStyle: _baseTextTheme.labelLarge,
@@ -169,7 +169,7 @@ class AppTheme {
         textStyle: _baseTextTheme.labelLarge,
       ),
     ),
-    dividerTheme: DividerThemeData(
+    dividerTheme: const DividerThemeData(
       color: AppColors.borderLight,
       thickness: 1,
     ),
@@ -187,7 +187,7 @@ class AppTheme {
       labelColor: AppColors.bmwBlue,
       unselectedLabelColor: AppColors.textMedium,
       indicatorSize: TabBarIndicatorSize.label,
-      indicator: UnderlineTabIndicator(
+      indicator: const UnderlineTabIndicator(
         borderSide: BorderSide(
           width: 2,
           color: AppColors.bmwBlue,
@@ -223,7 +223,7 @@ class AppTheme {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: AppColors.borderDark),
+        side: const BorderSide(color: AppColors.borderDark),
       ),
       color: AppColors.surfaceDark,
       margin: EdgeInsets.zero,
@@ -248,19 +248,19 @@ class AppTheme {
       fillColor: Colors.grey[900],
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.borderDark),
+        borderSide: const BorderSide(color: AppColors.borderDark),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.borderDark),
+        borderSide: const BorderSide(color: AppColors.borderDark),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.bmwBlue),
+        borderSide: const BorderSide(color: AppColors.bmwBlue),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.errorRed),
+        borderSide: const BorderSide(color: AppColors.errorRed),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     ),
@@ -281,7 +281,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(28),
         ),
-        side: BorderSide(color: AppColors.bmwBlue),
+        side: const BorderSide(color: AppColors.bmwBlue),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
         foregroundColor: AppColors.bmwBlue,
         textStyle: _baseTextTheme.labelLarge,
@@ -297,7 +297,7 @@ class AppTheme {
         textStyle: _baseTextTheme.labelLarge,
       ),
     ),
-    dividerTheme: DividerThemeData(
+    dividerTheme: const DividerThemeData(
       color: AppColors.borderDark,
       thickness: 1,
     ),
@@ -315,7 +315,7 @@ class AppTheme {
       labelColor: AppColors.bmwBlue,
       unselectedLabelColor: Colors.grey[400],
       indicatorSize: TabBarIndicatorSize.label,
-      indicator: UnderlineTabIndicator(
+      indicator: const UnderlineTabIndicator(
         borderSide: BorderSide(
           width: 2,
           color: AppColors.bmwBlue,
